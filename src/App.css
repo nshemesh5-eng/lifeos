@@ -1,0 +1,58 @@
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-loading-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--gold);
+  color: #000;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  animation: pulse 1.5s infinite;
+  box-shadow: var(--gold-glow);
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.app-topbar {
+  height: 56px;
+  background: rgba(13,17,32,0.8);
+  backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.app-signout {
+  height: 32px;
+  font-size: 13px;
+}
+
+.app-content {
+  flex: 1;
+  padding: 0 24px;
+}
