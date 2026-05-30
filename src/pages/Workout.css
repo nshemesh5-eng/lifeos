@@ -1,0 +1,21 @@
+.workout-active { padding: 24px; margin-bottom: 20px; border-color: rgba(239,68,68,0.2); background: linear-gradient(135deg, rgba(239,68,68,0.05), transparent); }
+.workout-active-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.workout-active-type { font-size: 18px; font-weight: 700; color: var(--text); }
+.workout-active-timer { font-size: 32px; font-weight: 900; color: var(--red); font-variant-numeric: tabular-nums; letter-spacing: 2px; margin-top: 4px; }
+.workout-sets-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.workout-set-row { display: grid; grid-template-columns: 28px 1fr auto auto; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface2); border-radius: 10px; }
+.workout-set-num { width: 24px; height: 24px; background: var(--red-dim); color: var(--red); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.workout-set-exercise { font-size: 14px; font-weight: 500; }
+.workout-set-detail { font-size: 13px; color: var(--text2); font-weight: 700; }
+.workout-set-weight { font-size: 13px; color: var(--text3); }
+.workout-add-set { border-top: 0.5px solid var(--border); padding-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+.workout-set-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
+.workout-history-title { font-size: 13px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+.workout-hist-card { display: flex; align-items: center; justify-content: space-between; padding: 16px; margin-bottom: 8px; cursor: pointer; }
+.workout-hist-left { display: flex; align-items: center; gap: 14px; }
+.workout-hist-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.workout-hist-type { font-size: 15px; font-weight: 700; }
+.workout-hist-date { font-size: 13px; color: var(--text3); margin-top: 2px; }
+.workout-hist-right { text-align: left; }
+.workout-hist-volume { font-size: 14px; font-weight: 700; color: var(--red); }
+.workout-hist-vol2 { font-size: 12px; color: var(--text3); margin-top: 2px; }
