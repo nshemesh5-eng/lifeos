@@ -20,17 +20,14 @@ import './App.css'
 function buildContext(tasks: any[], habits: any[], habitLogs: any[], reminders: any[]): LifeContext {
   const now = new Date()
   const today = format(now, 'yyyy-MM-dd')
-  const todayTasks = tasks.filter(t => !t.done).slice(0, 10).map(t => ({ title: t.title, done: t.done, priority: t.priority }))
-  const todayHabits = habits.map(h => ({ name: h.name, done: habitLogs.some((l: any) => l.habit_id === h.id && l.date === today) }))
-  const todayReminders = reminders.filter(r => r.active && r.frequency === 'daily').map(r => ({ text: r.title, time: r.time_of_day }))
   return {
     date: format(now, 'd בMMMM yyyy', { locale: he }),
     dayOfWeek: format(now, 'EEEE', { locale: he }),
-    todayTasks,
-    todayHabits,
+    todayTasks: tasks.filter(t => !t.done).slice(0, 8).map(t => ({ title: t.title, done: t.done, priority: t.priority })),
+    todayHabits: habits.map(h => ({ name: h.name, done: habitLogs.some((l: any) => l.habit_id === h.id && l.date === today) })),
     finance: { monthBalance: 0, monthExpenses: 0, monthIncome: 0 },
     workoutToday: false,
-    remindersToday: todayReminders,
+    remindersToday: reminders.filter(r => r.active && r.frequency === 'daily').map(r => ({ text: r.title, time: r.time_of_day })),
   }
 }
 
@@ -46,54 +43,40 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
+      setUser(session?.user ?? null); setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null)
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setUser(session?.user ?? null))
     return () => subscription.unsubscribe()
   }, [])
 
   const loadContext = useCallback(async (uid: string) => {
     const today = format(new Date(), 'yyyy-MM-dd')
     const [t, h, hl, r] = await Promise.all([
-      supabase.from('tasks').select('*').eq('user_id', uid).eq('done', false),
+      supabase.from('tasks').select('*').eq('user_id', uid),
       supabase.from('habits').select('*').eq('user_id', uid).eq('active', true),
       supabase.from('habit_logs').select('*').eq('user_id', uid).eq('date', today),
       supabase.from('reminders').select('*').eq('user_id', uid).eq('active', true),
     ])
-    setTasks(t.data || [])
-    setHabits(h.data || [])
-    setHabitLogs(hl.data || [])
-    setReminders(r.data || [])
+    setTasks(t.data || []); setHabits(h.data || [])
+    setHabitLogs(hl.data || []); setReminders(r.data || [])
   }, [])
 
-  useEffect(() => {
-    if (user) {
-      loadContext(user.id)
-    }
-  }, [user, loadContext])
+  useEffect(() => { if (user) loadContext(user.id) }, [user, loadContext])
 
   const context = buildContext(tasks, habits, habitLogs, reminders)
 
   useEffect(() => {
-    if (user && tasks.length + habits.length > 0) {
-      getDailyBriefing(context).then(setBriefing)
-    }
+    if (user) getDailyBriefing(context).then(setBriefing)
   }, [user, tasks.length, habits.length])
 
   if (loading) return (
-    <div className="app-loading">
-      <div className="app-loading-icon">ש</div>
-    </div>
+    <div className="app-loading"><div className="app-loading-icon">ש</div></div>
   )
-
   if (!user) return <Auth />
 
   const renderPage = () => {
     switch (page) {
-      case 'dashboard':  return <Dashboard context={context} onNavigate={setPage} />
+      case 'dashboard':  return <Dashboard context={context} onNavigate={setPage} user={user} />
       case 'finance':    return <Finance user={user} />
       case 'workout':    return <Workout user={user} />
       case 'tasks':      return <Tasks user={user} />
@@ -102,7 +85,7 @@ export default function App() {
       case 'invest':     return <Invest user={user} />
       case 'nutrition':  return <ComingSoon moduleId="nutrition" onNavigate={setPage} />
       case 'calendar':   return <ComingSoon moduleId="calendar" onNavigate={setPage} />
-      default:           return <Dashboard context={context} onNavigate={setPage} />
+      default:           return <Dashboard context={context} onNavigate={setPage} user={user} />
     }
   }
 
@@ -114,11 +97,9 @@ export default function App() {
           <div />
           <button className="btn-ghost app-signout" onClick={() => supabase.auth.signOut()}>יציאה</button>
         </div>
-        <div className="app-content page-container">
-          {renderPage()}
-        </div>
+        <div className="app-content page-container">{renderPage()}</div>
       </main>
-      <ShimshonChat context={context} briefing={briefing} />
+      <ShimshonChat context={context} briefing={briefing} onNavigate={setPage} usagePercent={0} />
     </div>
   )
 }
