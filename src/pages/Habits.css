@@ -1,0 +1,22 @@
+.habits-today-card { display: flex; align-items: center; gap: 20px; padding: 20px 24px; margin-bottom: 20px; }
+.habits-ring { flex-shrink: 0; }
+.habits-today-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.habits-today-sub { font-size: 13px; color: var(--text3); margin-bottom: 8px; }
+.habits-streak-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--teal-dim); color: var(--teal); border-radius: 99px; font-size: 13px; font-weight: 600; }
+.habits-list { display: flex; flex-direction: column; gap: 8px; }
+.habit-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; transition: all 0.15s; }
+.habit-done { opacity: 0.7; }
+.habit-check { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; transition: all 0.15s; }
+.habit-emoji { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.habit-info { flex: 1; }
+.habit-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.habit-streak { font-size: 12px; font-weight: 600; }
+.habit-mini-cal { display: flex; gap: 3px; align-items: center; flex-wrap: nowrap; }
+.habit-mini-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; transition: background 0.2s; }
+.habit-emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.habit-emoji-btn { width: 36px; height: 36px; border-radius: 8px; font-size: 18px; background: var(--surface2); border: 1.5px solid transparent; transition: all 0.15s; }
+.habit-emoji-btn.selected { border-color: var(--gold); background: var(--gold-dim); }
+.habit-color-picker { display: flex; gap: 8px; }
+.habit-color-btn { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid transparent; transition: transform 0.15s, border-color 0.15s; }
+.habit-color-btn:hover { transform: scale(1.15); }
+.habit-color-btn.selected { border-color: var(--text); }
