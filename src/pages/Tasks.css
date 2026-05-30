@@ -1,0 +1,24 @@
+.tasks-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.tasks-filter-btn { display: flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 99px; font-size: 13px; font-weight: 500; color: var(--text3); border: 0.5px solid var(--border); background: var(--surface); transition: all 0.15s; }
+.tasks-filter-btn:hover { background: var(--surface2); color: var(--text2); }
+.tasks-filter-count { background: var(--surface3); border-radius: 99px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+.tasks-section { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+.task-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; transition: background 0.1s; }
+.task-card:hover { background: var(--surface2); }
+.task-check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border3); flex-shrink: 0; margin-top: 1px; transition: all 0.15s; }
+.task-check:hover { border-color: var(--gold); background: var(--gold-dim); }
+.task-check-done { background: var(--green-dim); border-color: var(--green); color: var(--green); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.task-body { flex: 1; }
+.task-title { font-size: 15px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; }
+.task-done .task-title { text-decoration: line-through; color: var(--text3); }
+.task-desc { font-size: 13px; color: var(--text3); margin-bottom: 8px; }
+.task-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.task-meta .badge { font-size: 11px; padding: 2px 8px; }
+.task-due { font-size: 11px; color: var(--amber); }
+.task-del { color: var(--text3); font-size: 12px; width: 26px; height: 26px; border-radius: 6px; transition: all 0.15s; flex-shrink: 0; }
+.task-del:hover { background: var(--red-dim); color: var(--red); }
+.tasks-empty { text-align: center; padding: 48px 24px; }
+.tasks-empty-icon { font-size: 36px; margin-bottom: 12px; }
+.tasks-empty p { font-size: 14px; color: var(--text3); }
+.tasks-done-section { margin-top: 8px; }
+.tasks-done-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
