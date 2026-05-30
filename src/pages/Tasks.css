@@ -1,24 +1,50 @@
-.tasks-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-.tasks-filter-btn { display: flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 99px; font-size: 13px; font-weight: 500; color: var(--text3); border: 0.5px solid var(--border); background: var(--surface); transition: all 0.15s; }
-.tasks-filter-btn:hover { background: var(--surface2); color: var(--text2); }
-.tasks-filter-count { background: var(--surface3); border-radius: 99px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
-.tasks-section { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
-.task-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; transition: background 0.1s; }
-.task-card:hover { background: var(--surface2); }
-.task-check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border3); flex-shrink: 0; margin-top: 1px; transition: all 0.15s; }
-.task-check:hover { border-color: var(--gold); background: var(--gold-dim); }
-.task-check-done { background: var(--green-dim); border-color: var(--green); color: var(--green); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-.task-body { flex: 1; }
-.task-title { font-size: 15px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; }
-.task-done .task-title { text-decoration: line-through; color: var(--text3); }
-.task-desc { font-size: 13px; color: var(--text3); margin-bottom: 8px; }
-.task-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.task-meta .badge { font-size: 11px; padding: 2px 8px; }
-.task-due { font-size: 11px; color: var(--amber); }
-.task-del { color: var(--text3); font-size: 12px; width: 26px; height: 26px; border-radius: 6px; transition: all 0.15s; flex-shrink: 0; }
-.task-del:hover { background: var(--red-dim); color: var(--red); }
-.tasks-empty { text-align: center; padding: 48px 24px; }
-.tasks-empty-icon { font-size: 36px; margin-bottom: 12px; }
-.tasks-empty p { font-size: 14px; color: var(--text3); }
-.tasks-done-section { margin-top: 8px; }
-.tasks-done-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.tasks-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.tasks-stat { padding: 16px; text-align: center; }
+.tasks-stat-val { font-size: 26px; font-weight: 900; }
+.tasks-stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+.tasks-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.tasks-search { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 0 14px; height: 40px; }
+.tasks-search input { flex: 1; background: none; border: none; color: var(--text); font-size: 14px; }
+.tasks-search input::placeholder { color: var(--text3); }
+
+.tasks-filters2 { display: flex; gap: 6px; flex-wrap: wrap; }
+.tasks-filter2 { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; color: var(--text3); border: 0.5px solid var(--border); background: var(--surface); transition: all 0.15s; cursor: pointer; }
+.tasks-filter2:hover { background: var(--surface2); color: var(--text2); }
+.tasks-filter-badge { background: var(--surface3); border-radius: 99px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+
+.tasks-view-toggle { display: flex; background: var(--surface2); border-radius: var(--radius); padding: 3px; gap: 2px; width: fit-content; }
+.tasks-view-btn { padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text3); transition: all 0.15s; }
+.tasks-view-btn.active { background: var(--surface3); color: var(--text); }
+
+.tasks-list2 { display: flex; flex-direction: column; gap: 6px; }
+.task-card2 { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; transition: background 0.1s; }
+.task-card2:hover { background: var(--surface2); }
+.task-done2 { opacity: 0.6; }
+.task-compact { padding: 10px 14px; }
+.task-check2 { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border3); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all 0.15s; cursor: pointer; }
+.task-check2:hover { border-color: var(--gold); background: var(--gold-dim); }
+.task-check2.checked { color: var(--green); }
+.task-body2 { flex: 1; }
+.task-title2 { font-size: 15px; font-weight: 600; margin-bottom: 3px; line-height: 1.4; }
+.task-desc2 { font-size: 13px; color: var(--text3); margin-bottom: 7px; }
+.task-meta2 { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.task-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+.task-due2 { font-size: 11px; }
+.task-del2 { color: var(--text3); font-size: 12px; width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.task-del2:hover { background: var(--red-dim); color: var(--red); }
+
+.tasks-done-section2 { margin-top: 16px; }
+.tasks-done-label { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.tasks-empty2 { text-align: center; padding: 60px 24px; }
+.tasks-empty2 p { font-size: 14px; color: var(--text3); }
+
+/* Kanban */
+.tasks-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
+.kanban-col { background: var(--surface2); border-radius: var(--radius-lg); padding: 16px; }
+.kanban-col-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 13px; font-weight: 700; color: var(--text2); }
+.kanban-count { background: var(--surface3); border-radius: 99px; padding: 2px 10px; font-size: 12px; }
+.kanban-cards { display: flex; flex-direction: column; gap: 8px; }
+.kanban-empty { text-align: center; padding: 24px; font-size: 13px; color: var(--text3); border: 1px dashed var(--border2); border-radius: var(--radius); }
+
+@media (max-width: 800px) { .tasks-kanban { grid-template-columns: 1fr; } .tasks-stats { grid-template-columns: repeat(2,1fr); } }
