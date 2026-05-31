@@ -1,5 +1,3 @@
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY
-
 export interface ShimshonMessage {
   role: 'user' | 'shimshon'
   content: string
@@ -25,18 +23,17 @@ const SYSTEM = `אתה שמשון — העוזר האישי החכם של המש
 - לא אומר "כמובן" / "בהחלט" / "שאלה מצוינת" / "בטח"
 - נותן מספרים ועובדות, לא עצות כלליות
 - אם שואלים מה יש היום — תן סיכום: משימות + הרגלים + תזכורות + אימון
-- אם שואלים על פיננסים — תן מספרים מדויקים
-- זוכר את כל השיחה
-- מזכיר דברים חשובים שהמשתמש אולי שכח`
+- אם שואלים על פיננסים — תן מספרים מדויקים`
 
 const NAV_KEYWORDS: Record<string, string[]> = {
-  finance:   ['פיננסים','כסף','תקציב','הוצאות','הכנסות','עסקאות','חיסכון','משכורת'],
-  workout:   ['אימון','אימונים','כושר','ספורט','חדר כושר','סטים','חזרות','תרגיל'],
-  tasks:     ['משימות','משימה','לעשות','טודו','todo'],
-  habits:    ['הרגלים','הרגל','streak','רצף'],
-  reminders: ['תזכורות','תזכורת','להזכיר','תזכיר'],
-  invest:    ['השקעות','השקעה','תיק','מניות','קריפטו','etf'],
-  nutrition: ['תזונה','אוכל','מה לאכול','קלוריות','תפריט'],
+  finance:   ['פיננסים','כסף','תקציב','הוצאות','הכנסות','עסקאות'],
+  workout:   ['אימון','אימונים','כושר','ספורט','סטים','תרגיל'],
+  tasks:     ['משימות','משימה','לעשות'],
+  habits:    ['הרגלים','הרגל','streak'],
+  reminders: ['תזכורות','תזכורת'],
+  invest:    ['השקעות','השקעה','מניות'],
+  nutrition: ['תזונה','אוכל','קלוריות','תפריט'],
+  calendar:  ['לוח שנה','יומן','אירוע'],
 }
 
 export function detectNavIntent(text: string): string | null {
@@ -47,58 +44,51 @@ export function detectNavIntent(text: string): string | null {
   return null
 }
 
-export async function askShimshon(
-  messages: ShimshonMessage[],
-  context: LifeContext
-): Promise<string> {
-  if (!GEMINI_KEY) return 'שמשון לא מחובר — הגדר VITE_GEMINI_API_KEY.'
-
-  const ctx = buildContextString(context)
-  const contents = [
-    { role: 'user', parts: [{ text: SYSTEM + '\n\n' + ctx }] },
-    { role: 'model', parts: [{ text: 'מוכן.' }] },
-    ...messages.map(m => ({
-      role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }]
-    }))
-  ]
-
+async function callGemini(messages: Array<{role: string, parts: Array<{text: string}>}>, systemPrompt: string): Promise<string> {
+  // Call via our server-side API route (no CORS/allowlist issues)
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents, generationConfig: { temperature: 0.7, maxOutputTokens: 500 } })
-      }
-    )
-    if (!res.ok) throw new Error('Gemini error')
+    const res = await fetch('/api/shimshon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, systemPrompt })
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      console.error('Shimshon API error:', err)
+      return `שגיאה: ${err.error || res.statusText}`
+    }
     const data = await res.json()
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'לא הצלחתי לעבד.'
-  } catch {
+    return data.text || 'לא הצלחתי לעבד.'
+  } catch (e) {
+    console.error('Shimshon fetch error:', e)
     return 'שגיאה בתקשורת עם שמשון.'
   }
 }
 
+export async function askShimshon(messages: ShimshonMessage[], context: LifeContext): Promise<string> {
+  const ctx = buildContextString(context)
+  const geminiMessages = messages.map(m => ({
+    role: m.role === 'user' ? 'user' : 'model',
+    parts: [{ text: m.content }]
+  }))
+  return callGemini(geminiMessages, SYSTEM + '\n\n' + ctx)
+}
+
 export async function getDailyBriefing(context: LifeContext): Promise<string> {
-  if (!GEMINI_KEY) return ''
   const ctx = buildContextString(context)
   const prompt = `${SYSTEM}\n\n${ctx}\n\nכתוב ברייפינג בוקר קצר (2 משפטים בלבד) — מה הכי חשוב היום ומה לשים לב אליו.`
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 150 }
-        })
-      }
-    )
-    if (!res.ok) throw new Error()
+    const res = await fetch('/api/shimshon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', parts: [{ text: 'ברייפינג בוקר' }] }],
+        systemPrompt: prompt
+      })
+    })
+    if (!res.ok) return ''
     const data = await res.json()
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+    return data.text || ''
   } catch { return '' }
 }
 
