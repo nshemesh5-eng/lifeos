@@ -1,17 +1,3 @@
-// Simple in-memory rate limiter (resets per serverless instance)
-const requestLog = []
-const RATE_WINDOW_MS = 60_000
-const RATE_LIMIT = 25 // conservative limit (free tier is 30 RPM for gemini-2.0-flash-lite)
-
-function isRateLimited() {
-  const now = Date.now()
-  // Remove entries older than 1 minute
-  while (requestLog.length && requestLog[0] < now - RATE_WINDOW_MS) requestLog.shift()
-  if (requestLog.length >= RATE_LIMIT) return true
-  requestLog.push(now)
-  return false
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -20,17 +6,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  if (isRateLimited()) {
-    return res.status(429).json({ error: 'יותר מדי בקשות — המתן דקה ונסה שוב' })
-  }
-
   const key = process.env.VITE_GEMINI_API_KEY
   if (!key) return res.status(500).json({ error: 'API key not configured' })
 
   const { messages = [], systemPrompt = '' } = req.body || {}
 
-  // Build contents — keep conversation short to save tokens
-  const recentMessages = messages.slice(-6) // last 6 messages max
+  // Keep conversation short to save tokens
+  const recentMessages = messages.slice(-8)
   const contents = [
     { role: 'user', parts: [{ text: systemPrompt || 'אתה שמשון, עוזר אישי בעברית.' }] },
     { role: 'model', parts: [{ text: 'מוכן.' }] },
@@ -47,7 +29,7 @@ export default async function handler(req, res) {
           contents,
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 300,  // keep short to reduce quota usage
+            maxOutputTokens: 500
           }
         })
       }
