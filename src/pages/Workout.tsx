@@ -454,7 +454,7 @@ export default function Workout({ user }: { user: User }) {
       <div className="wo-tabs">
         {(['log','history','stats','exercises'] as const).map(t => (
           <button key={t} className={`wo-tab ${tab===t?'active':''}`}
-            onClick={() => { setTab(t); if (t === 'exercises') loadExerciseDB() }}>
+            onClick={() => { setTab(t); if (t === 'exercises') loadExerciseDB(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
             {t === 'log' ? '📋 היסטוריה' : t === 'history' ? '📅 לוח שנה' : t === 'stats' ? '🏆 PRs' : '📚 תרגילים'}
           </button>
         ))}
