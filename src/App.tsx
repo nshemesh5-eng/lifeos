@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import { LifeContext, getDailyBriefing } from './lib/shimshon'
@@ -74,8 +74,15 @@ export default function App() {
 
   const context = buildContext(tasks, habits, habitLogs, reminders, transactions)
 
+  // Fetch briefing once when all data is loaded (avoid 429 from multiple renders)
+  const briefingFetched = useRef(false)
   useEffect(() => {
-    if (user) getDailyBriefing(context).then(setBriefing)
+    if (!user) return
+    // Wait until we have at least some data loaded (tasks OR habits array exists)
+    const hasData = tasks.length > 0 || habits.length > 0 || transactions.length > 0
+    if (!hasData || briefingFetched.current) return
+    briefingFetched.current = true
+    getDailyBriefing(context).then(setBriefing)
   }, [user, tasks.length, habits.length, transactions.length])
 
   if (loading) return <div className="app-loading"><div className="app-loading-icon">ש</div></div>
