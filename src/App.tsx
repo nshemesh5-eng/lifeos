@@ -74,16 +74,18 @@ export default function App() {
 
   const context = buildContext(tasks, habits, habitLogs, reminders, transactions)
 
-  // Fetch briefing once when all data is loaded (avoid 429 from multiple renders)
+  // Fetch briefing ONCE, 4 seconds after login (let data load first, avoid rate limits)
   const briefingFetched = useRef(false)
   useEffect(() => {
-    if (!user) return
-    // Wait until we have at least some data loaded (tasks OR habits array exists)
-    const hasData = tasks.length > 0 || habits.length > 0 || transactions.length > 0
-    if (!hasData || briefingFetched.current) return
+    if (!user || briefingFetched.current) return
     briefingFetched.current = true
-    getDailyBriefing(context).then(setBriefing)
-  }, [user, tasks.length, habits.length, transactions.length])
+    // Delay to let Supabase data load and avoid competing API calls
+    const timer = setTimeout(() => {
+      getDailyBriefing(context).then(setBriefing)
+    }, 4000)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   if (loading) return <div className="app-loading"><div className="app-loading-icon">ש</div></div>
   if (!user) return <Auth />
