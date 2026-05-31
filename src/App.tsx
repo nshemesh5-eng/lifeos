@@ -99,7 +99,7 @@ export default function App() {
         </div>
         <div className="app-content page-container">{renderPage()}</div>
       </main>
-      <ShimshonChat context={context} briefing={briefing} onNavigate={setPage} usagePercent={0} />
+      <ShimshonChat context={context} briefing={briefing} onNavigate={setPage} />
     </div>
   )
 }
