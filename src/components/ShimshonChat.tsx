@@ -1,53 +1,49 @@
 import { useState, useRef, useEffect } from 'react'
-import { askShimshon, ShimshonMessage, LifeContext } from '../lib/shimshon'
+import { askShimshon, ShimshonMessage, LifeContext, detectNavIntent } from '../lib/shimshon'
 import './ShimshonChat.css'
 
 interface Props {
   context: LifeContext
   briefing?: string
   onNavigate?: (page: string) => void
-  usagePercent?: number
 }
 
-// Detect navigation intent in response
-function extractNavigation(text: string): string | null {
-  const navMap: Record<string, string[]> = {
-    finance: ['פיננסים', 'כסף', 'תקציב', 'הוצאות', 'הכנסות', 'עסקאות', 'suntrack', 'fintrack'],
-    workout: ['אימון', 'אימונים', 'כושר', 'ספורט', 'חדר כושר', 'סטים'],
-    tasks: ['משימות', 'משימה', 'רשימה', 'לעשות'],
-    habits: ['הרגלים', 'הרגל', 'streak'],
-    reminders: ['תזכורות', 'תזכורת', 'להזכיר'],
-    invest: ['השקעות', 'השקעה', 'תיק'],
-  }
-  const lower = text.toLowerCase()
-  for (const [page, keywords] of Object.entries(navMap)) {
-    if (keywords.some(k => lower.includes(k))) return page
-  }
-  return null
+// Estimate rough token/context usage
+function estimateUsage(messages: ShimshonMessage[]): number {
+  const totalChars = messages.reduce((s, m) => s + m.content.length, 0)
+  return Math.min(100, Math.round((totalChars / 8000) * 100))
 }
 
-export default function ShimshonChat({ context, briefing, onNavigate, usagePercent = 0 }: Props) {
+const PAGE_LABELS: Record<string, string> = {
+  finance:'₪ פיננסים', workout:'◈ אימונים', tasks:'☰ משימות',
+  habits:'◎ הרגלים', reminders:'◷ תזכורות', invest:'△ השקעות', nutrition:'🥗 תזונה',
+}
+
+export default function ShimshonChat({ context, briefing, onNavigate }: Props) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ShimshonMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [suggestedNav, setSuggestedNav] = useState<string | null>(null)
-  const [showWarning, setShowWarning] = useState(usagePercent >= 80)
+  const [navSuggest, setNavSuggest] = useState<string | null>(null)
+  const [warned80, setWarned80] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const usage = estimateUsage(messages)
+  const show80Warning = usage >= 80 && !warned80
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   useEffect(() => {
-    if (usagePercent >= 80) setShowWarning(true)
-  }, [usagePercent])
+    if (usage >= 80 && !warned80) setWarned80(false) // reset to show again
+  }, [usage])
 
   const send = async (text?: string) => {
     const msg = text || input.trim()
     if (!msg || loading) return
     setInput('')
-    setSuggestedNav(null)
+    setNavSuggest(null)
 
     const userMsg: ShimshonMessage = { role: 'user', content: msg, timestamp: new Date() }
     const next = [...messages, userMsg]
@@ -59,99 +55,107 @@ export default function ShimshonChat({ context, briefing, onNavigate, usagePerce
     setMessages([...next, aiMsg])
     setLoading(false)
 
-    // Check if user wants to navigate
-    const navFromQ = extractNavigation(msg)
-    const navFromA = extractNavigation(reply)
-    if (navFromQ || navFromA) setSuggestedNav(navFromQ || navFromA)
+    // Detect navigation intent
+    const nav = detectNavIntent(msg) || detectNavIntent(reply)
+    if (nav && onNavigate) setNavSuggest(nav)
   }
 
-  const PAGE_LABELS: Record<string, string> = {
-    finance: '₪ פיננסים', workout: '◈ אימונים', tasks: '☰ משימות',
-    habits: '◎ הרגלים', reminders: '◷ תזכורות', invest: '△ השקעות',
-  }
-
-  const quickActions = ['מה יש לי היום?', 'איך אני עומד תקציבית?', 'מה עשיתי השבוע?']
+  const quickActions = [
+    'מה יש לי היום?',
+    'איך אני עומד תקציבית?',
+    'מה לא עשיתי עדיין?',
+  ]
 
   return (
     <>
-      {/* Usage warning toast */}
-      {showWarning && !open && (
-        <div className="shimshon-warning" onClick={() => { setOpen(true); setShowWarning(false) }}>
+      {/* 80% warning toast */}
+      {show80Warning && !open && (
+        <div className="shimshon-warning" onClick={() => { setOpen(true); setWarned80(true) }}>
           <span>⚠️</span>
-          <span>ניצול context: <strong>{usagePercent}%</strong> — שמשון מאזהיר</span>
-          <button onClick={e => { e.stopPropagation(); setShowWarning(false) }}>✕</button>
+          <span>שיחה ארוכה — שמשון ב-<strong>{usage}%</strong> קיבולת</span>
+          <button onClick={e => { e.stopPropagation(); setWarned80(true) }}>✕</button>
         </div>
       )}
 
       {/* FAB */}
-      <button className={`shimshon-fab ${open ? 'open' : ''}`} onClick={() => setOpen(!open)}>
-        <span className="shimshon-fab-icon">ש</span>
-        {!open && usagePercent >= 80 && <span className="shimshon-fab-alert">!</span>}
+      <button
+        className={`shimshon-fab ${open ? 'open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        title="שמשון"
+      >
+        <span className="shimshon-fab-letter">ש</span>
+        {!open && usage >= 80 && <span className="shimshon-fab-badge">!</span>}
         {!open && <span className="shimshon-fab-pulse" />}
       </button>
 
-      {/* Chat panel */}
+      {/* Panel */}
       {open && (
         <div className="shimshon-panel fade-in">
+          {/* Header */}
           <div className="shimshon-header">
-            <div className="shimshon-header-info">
-              <div className="shimshon-avatar">ש</div>
+            <div className="shimshon-header-left">
+              <div className="shimshon-av">ש</div>
               <div>
                 <div className="shimshon-name">שמשון</div>
-                <div className="shimshon-status"><span className="shimshon-dot" />פעיל · Life OS</div>
+                <div className="shimshon-status">
+                  <span className="shimshon-dot" />
+                  פעיל
+                </div>
               </div>
             </div>
-            <button className="shimshon-close" onClick={() => setOpen(false)}>✕</button>
+            <button className="shimshon-x" onClick={() => setOpen(false)}>✕</button>
           </div>
 
-          {/* Usage bar */}
-          {usagePercent > 0 && (
-            <div className="shimshon-usage">
+          {/* Context usage bar */}
+          {messages.length > 2 && (
+            <div className="shimshon-ctx-bar">
               <span>context</span>
-              <div className="shimshon-usage-bar">
-                <div className="shimshon-usage-fill" style={{
-                  width: `${usagePercent}%`,
-                  background: usagePercent >= 80 ? 'var(--red)' : usagePercent >= 60 ? 'var(--amber)' : 'var(--green)'
+              <div className="shimshon-ctx-track">
+                <div className="shimshon-ctx-fill" style={{
+                  width: `${usage}%`,
+                  background: usage >= 80 ? 'var(--red)' : usage >= 60 ? 'var(--amber)' : 'var(--green)'
                 }} />
               </div>
-              <span style={{ color: usagePercent >= 80 ? 'var(--red)' : 'var(--text3)' }}>{usagePercent}%</span>
+              <span style={{ color: usage >= 80 ? 'var(--red)' : 'var(--text3)' }}>{usage}%</span>
             </div>
           )}
 
-          <div className="shimshon-messages">
+          {/* Messages */}
+          <div className="shimshon-msgs">
             {briefing && messages.length === 0 && (
-              <div className="shimshon-msg shimshon-msg--ai">
+              <div className="shimshon-msg shimshon-ai">
                 <div className="shimshon-bubble">{briefing}</div>
-                <div className="shimshon-time">ברייפינג בוקר</div>
+                <div className="shimshon-ts">ברייפינג בוקר</div>
               </div>
             )}
             {!briefing && messages.length === 0 && (
-              <div className="shimshon-empty">
-                <div className="shimshon-empty-icon">ש</div>
+              <div className="shimshon-empty-state">
+                <div className="shimshon-empty-av">ש</div>
                 <p>מה אפשר לעשות בשבילך?</p>
               </div>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`shimshon-msg shimshon-msg--${m.role === 'user' ? 'user' : 'ai'}`}>
+              <div key={i} className={`shimshon-msg ${m.role === 'user' ? 'shimshon-user' : 'shimshon-ai'}`}>
                 <div className="shimshon-bubble">{m.content}</div>
               </div>
             ))}
             {loading && (
-              <div className="shimshon-msg shimshon-msg--ai">
-                <div className="shimshon-bubble shimshon-typing"><span /><span /><span /></div>
+              <div className="shimshon-msg shimshon-ai">
+                <div className="shimshon-bubble shimshon-typing">
+                  <span /><span /><span />
+                </div>
               </div>
             )}
 
-            {/* Navigation suggestion */}
-            {suggestedNav && onNavigate && (
-              <div className="shimshon-nav-suggest fade-in">
-                <span>עבור ל{PAGE_LABELS[suggestedNav]}</span>
-                <button className="shimshon-nav-btn" onClick={() => { onNavigate(suggestedNav); setOpen(false); setSuggestedNav(null) }}>
+            {/* Nav suggestion */}
+            {navSuggest && onNavigate && (
+              <div className="shimshon-nav-chip fade-in">
+                <span>פתח: {PAGE_LABELS[navSuggest]}</span>
+                <button onClick={() => { onNavigate(navSuggest); setOpen(false); setNavSuggest(null) }}>
                   פתח ←
                 </button>
               </div>
             )}
-
             <div ref={bottomRef} />
           </div>
 
@@ -162,25 +166,34 @@ export default function ShimshonChat({ context, briefing, onNavigate, usagePerce
                 <button key={q} className="shimshon-quick-btn" onClick={() => send(q)}>{q}</button>
               ))}
               {/* Module shortcuts */}
-              <div className="shimshon-shortcuts">
-                {Object.entries(PAGE_LABELS).map(([page, label]) => onNavigate && (
-                  <button key={page} className="shimshon-shortcut" onClick={() => { onNavigate(page); setOpen(false) }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {onNavigate && (
+                <div className="shimshon-shortcuts">
+                  {Object.entries(PAGE_LABELS).map(([page, label]) => (
+                    <button key={page} className="shimshon-shortcut"
+                      onClick={() => { onNavigate(page); setOpen(false) }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          <div className="shimshon-input-row">
+          {/* Input */}
+          <div className="shimshon-input-area">
             <input
               className="shimshon-input"
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && send()}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
               placeholder="שאל את שמשון..."
+              autoFocus
             />
-            <button className="shimshon-send" onClick={() => send()} disabled={!input.trim() || loading}>←</button>
+            <button
+              className="shimshon-send"
+              onClick={() => send()}
+              disabled={!input.trim() || loading}
+            >←</button>
           </div>
         </div>
       )}
