@@ -12,20 +12,25 @@ import Tasks from './pages/Tasks'
 import Habits from './pages/Habits'
 import Reminders from './pages/Reminders'
 import Invest from './pages/Invest'
-import ComingSoon from './pages/ComingSoon'
+import Nutrition from './pages/Nutrition'
+import Calendar from './pages/Calendar'
 import Sidebar from './components/Sidebar'
 import ShimshonChat from './components/ShimshonChat'
 import './App.css'
 
-function buildContext(tasks: any[], habits: any[], habitLogs: any[], reminders: any[]): LifeContext {
+function buildContext(tasks: any[], habits: any[], habitLogs: any[], reminders: any[], transactions: any[]): LifeContext {
   const now = new Date()
   const today = format(now, 'yyyy-MM-dd')
+  const ms = format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd')
+  const monthTx = transactions.filter(t => t.date >= ms)
+  const income = monthTx.filter(t => t.type === 'income').reduce((s: number, t: any) => s + t.amount, 0)
+  const expenses = monthTx.filter(t => t.type === 'expense').reduce((s: number, t: any) => s + t.amount, 0)
   return {
     date: format(now, 'd בMMMM yyyy', { locale: he }),
     dayOfWeek: format(now, 'EEEE', { locale: he }),
     todayTasks: tasks.filter(t => !t.done).slice(0, 8).map(t => ({ title: t.title, done: t.done, priority: t.priority })),
     todayHabits: habits.map(h => ({ name: h.name, done: habitLogs.some((l: any) => l.habit_id === h.id && l.date === today) })),
-    finance: { monthBalance: 0, monthExpenses: 0, monthIncome: 0 },
+    finance: { monthBalance: income - expenses, monthExpenses: expenses, monthIncome: income },
     workoutToday: false,
     remindersToday: reminders.filter(r => r.active && r.frequency === 'daily').map(r => ({ text: r.title, time: r.time_of_day })),
   }
@@ -40,6 +45,7 @@ export default function App() {
   const [habits, setHabits] = useState<any[]>([])
   const [habitLogs, setHabitLogs] = useState<any[]>([])
   const [reminders, setReminders] = useState<any[]>([])
+  const [transactions, setTransactions] = useState<any[]>([])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,27 +57,27 @@ export default function App() {
 
   const loadContext = useCallback(async (uid: string) => {
     const today = format(new Date(), 'yyyy-MM-dd')
-    const [t, h, hl, r] = await Promise.all([
+    const [t, h, hl, r, tx] = await Promise.all([
       supabase.from('tasks').select('*').eq('user_id', uid),
       supabase.from('habits').select('*').eq('user_id', uid).eq('active', true),
       supabase.from('habit_logs').select('*').eq('user_id', uid).eq('date', today),
       supabase.from('reminders').select('*').eq('user_id', uid).eq('active', true),
+      supabase.from('transactions').select('id,type,amount,date').eq('user_id', uid).gte('date', format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')),
     ])
     setTasks(t.data || []); setHabits(h.data || [])
     setHabitLogs(hl.data || []); setReminders(r.data || [])
+    setTransactions(tx.data || [])
   }, [])
 
   useEffect(() => { if (user) loadContext(user.id) }, [user, loadContext])
 
-  const context = buildContext(tasks, habits, habitLogs, reminders)
+  const context = buildContext(tasks, habits, habitLogs, reminders, transactions)
 
   useEffect(() => {
     if (user) getDailyBriefing(context).then(setBriefing)
-  }, [user, tasks.length, habits.length])
+  }, [user, tasks.length, habits.length, transactions.length])
 
-  if (loading) return (
-    <div className="app-loading"><div className="app-loading-icon">ש</div></div>
-  )
+  if (loading) return <div className="app-loading"><div className="app-loading-icon">ש</div></div>
   if (!user) return <Auth />
 
   const renderPage = () => {
@@ -83,8 +89,8 @@ export default function App() {
       case 'habits':     return <Habits user={user} />
       case 'reminders':  return <Reminders user={user} />
       case 'invest':     return <Invest user={user} />
-      case 'nutrition':  return <ComingSoon moduleId="nutrition" onNavigate={setPage} />
-      case 'calendar':   return <ComingSoon moduleId="calendar" onNavigate={setPage} />
+      case 'nutrition':  return <Nutrition user={user} />
+      case 'calendar':   return <Calendar />
       default:           return <Dashboard context={context} onNavigate={setPage} user={user} />
     }
   }
