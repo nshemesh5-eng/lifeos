@@ -40,6 +40,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState('dashboard')
+  const navigate = (p: string) => { setPage(p); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50) }
   const [briefing, setBriefing] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
   const [habits, setHabits] = useState<any[]>([])
@@ -82,7 +83,7 @@ export default function App() {
 
   const renderPage = () => {
     switch (page) {
-      case 'dashboard':  return <Dashboard context={context} onNavigate={setPage} user={user} />
+      case 'dashboard':  return <Dashboard context={context} onNavigate={navigate} user={user} />
       case 'finance':    return <Finance user={user} />
       case 'workout':    return <Workout user={user} />
       case 'tasks':      return <Tasks user={user} />
@@ -91,13 +92,13 @@ export default function App() {
       case 'invest':     return <Invest user={user} />
       case 'nutrition':  return <Nutrition user={user} />
       case 'calendar':   return <Calendar />
-      default:           return <Dashboard context={context} onNavigate={setPage} user={user} />
+      default:           return <Dashboard context={context} onNavigate={navigate} user={user} />
     }
   }
 
   return (
     <div className="app-layout">
-      <Sidebar active={page} onNavigate={setPage} userName={user.email?.split('@')[0]} />
+      <Sidebar active={page} onNavigate={navigate} userName={user.email?.split('@')[0]} />
       <main className="app-main">
         <div className="app-topbar">
           <div />
@@ -105,7 +106,7 @@ export default function App() {
         </div>
         <div className="app-content page-container">{renderPage()}</div>
       </main>
-      <ShimshonChat context={context} briefing={briefing} onNavigate={setPage} />
+      <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} />
     </div>
   )
 }
