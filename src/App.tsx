@@ -100,7 +100,7 @@ export default function App() {
       case 'reminders':  return <Reminders user={user} />
       case 'invest':     return <Invest user={user} />
       case 'nutrition':  return <Nutrition user={user} />
-      case 'calendar':   return <Calendar />
+      case 'calendar':   return <Calendar user={user} />
       default:           return <Dashboard context={context} onNavigate={navigate} user={user} />
     }
   }
