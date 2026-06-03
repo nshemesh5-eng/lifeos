@@ -95,3 +95,127 @@
 .dash-quick-emoji { font-size: 16px; }
 .dash-quick-label { font-size: 12px; font-weight: 500; color: var(--text2); }
 .dash-quick-btn:hover .dash-quick-label { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════
+   DASHBOARD VISUAL UPGRADE
+   ══════════════════════════════════════════════════════ */
+
+/* ─── Stat cards — colored gradients ────────────────── */
+.dash-stat-card { position: relative; overflow: hidden; }
+.dash-stat-card::after {
+  content: '';
+  position: absolute;
+  top: -20px; left: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--card-glow, transparent);
+  opacity: 0.15;
+  pointer-events: none;
+}
+.dash-stat-card:nth-child(1) { --card-glow: var(--green); border-color: color-mix(in srgb, var(--green) 15%, transparent); }
+.dash-stat-card:nth-child(2) { --card-glow: var(--gold);  border-color: color-mix(in srgb, var(--gold)  15%, transparent); }
+.dash-stat-card:nth-child(3) { --card-glow: var(--m-workout); border-color: color-mix(in srgb, var(--m-workout) 15%, transparent); }
+.dash-stat-card:nth-child(4) { --card-glow: var(--m-habits); border-color: color-mix(in srgb, var(--m-habits) 15%, transparent); }
+.dash-stat-card:nth-child(5) { --card-glow: var(--m-tasks); border-color: color-mix(in srgb, var(--m-tasks) 15%, transparent); }
+.dash-stat-card:nth-child(6) { --card-glow: var(--m-calendar); border-color: color-mix(in srgb, var(--m-calendar) 15%, transparent); }
+
+/* ─── Stat icons — gradient bg ──────────────────────── */
+.dash-stat-icon { border-radius: 12px; font-weight: 800; }
+
+/* ─── Stat value — number pop ────────────────────────── */
+.dash-stat-value { animation: countUp 0.6s ease; }
+
+/* ─── Briefing card — gold gradient ─────────────────── */
+.dash-brief {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--gold) 5%, var(--surface)),
+    var(--surface)
+  ) !important;
+  border-color: color-mix(in srgb, var(--gold) 20%, transparent) !important;
+  box-shadow: 0 2px 16px color-mix(in srgb, var(--gold) 8%, transparent);
+}
+
+/* ─── Finance card ───────────────────────────────────── */
+.dash-card:has(.dash-fin-row) {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--green) 4%, var(--surface)),
+    var(--surface)
+  ) !important;
+}
+.dash-fin-val { font-size: 18px !important; }
+.dash-flow-bar {
+  height: 5px !important;
+  background: var(--surface3) !important;
+  border-radius: 99px !important;
+  margin: 4px 0 !important;
+}
+
+/* ─── Category bars — colored ────────────────────────── */
+.dash-cat-row { padding: 3px 0; }
+.dash-cat-name { font-size: 11px !important; }
+
+/* ─── Habit heatmap — glow active ────────────────────── */
+.dash-heat-cell {
+  border-radius: 3px !important;
+  transition: transform 0.1s;
+}
+.dash-heat-cell:hover { transform: scale(1.3); z-index: 1; position: relative; }
+
+/* ─── Habit chips — colored ──────────────────────────── */
+.dash-habit-chip.done {
+  box-shadow: 0 0 8px color-mix(in srgb, currentColor 30%, transparent);
+}
+
+/* ─── Task rows ──────────────────────────────────────── */
+.dash-task-row:hover { background: var(--surface2); border-radius: 6px; margin: 0 -8px; padding: 6px 8px; }
+
+/* ─── Quick action buttons ───────────────────────────── */
+.dash-quick-btn {
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s !important;
+  position: relative; overflow: hidden;
+}
+.dash-quick-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow) !important;
+  border-color: var(--border2) !important;
+}
+.dash-quick-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--surface2), transparent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dash-quick-btn:hover::before { opacity: 1; }
+
+/* ─── Greeting name glow ─────────────────────────────── */
+.dash-name {
+  text-shadow: 0 0 30px color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+/* ─── Reminder pill ──────────────────────────────────── */
+.dash-remind-pill {
+  animation: pulse 3s ease-in-out infinite;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 20%, transparent);
+}
+
+/* ─── Grid cards hover ───────────────────────────────── */
+.dash-card {
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s !important;
+  cursor: default;
+}
+.dash-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow) !important;
+  border-color: var(--border2) !important;
+}
+
+/* ─── Event dot glow ─────────────────────────────────── */
+.dash-event-dot {
+  box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Investments up/down ────────────────────────────── */
+.dash-inv-row { border-right: 2px solid var(--border); }
+.dash-inv-row:hover { border-right-color: var(--gold); background: var(--surface2); border-radius: 6px; margin: 0 -8px; padding: 7px 8px; }
