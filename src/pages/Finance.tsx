@@ -8,7 +8,8 @@ import './Finance.css'
 // ─── Types ───────────────────────────────────────────────
 interface Transaction {
   id: string; type: 'income'|'expense'; amount: number
-  description: string; category: string; date: string; notes?: string; created_at: string
+  description: string; category: string; date: string; notes?: string
+  reference?: string; account?: string; currency?: string; created_at: string
 }
 interface Budget { id: string; category: string; amount: number; month: string }
 interface Goal { id: string; name: string; target: number; current: number; deadline?: string; emoji?: string }
@@ -83,12 +84,16 @@ export default function Finance({ user }: { user: User }) {
 
   // Forms
   const [showAdd, setShowAdd] = useState(false)
+  const [editTx, setEditTx] = useState<Transaction|null>(null)
   const [type, setType] = useState<'income'|'expense'>('expense')
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
   const [cat, setCat] = useState('food')
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [notes, setNotes] = useState('')
+  const [reference, setReference] = useState('')
+  const [account, setAccount] = useState('')
+  const [currency, setCurrency] = useState('ILS')
   const [saving, setSaving] = useState(false)
 
   // Goal form
@@ -185,17 +190,37 @@ export default function Finance({ user }: { user: User }) {
   const monthBudgets = budgets.filter(b => b.month === monthStr)
 
   // ── Save transaction ───────────────────────────────────
+  const resetForm = () => {
+    setEditTx(null); setAmount(''); setDesc(''); setNotes('')
+    setReference(''); setAccount(''); setCurrency('ILS')
+    setDate(format(new Date(), 'yyyy-MM-dd')); setType('expense'); setCat('food')
+  }
+
+  const openEdit = (t: Transaction) => {
+    setEditTx(t)
+    setType(t.type); setAmount(String(t.amount)); setDesc(t.description)
+    setCat(t.category); setDate(t.date); setNotes(t.notes || '')
+    setReference(t.reference || ''); setAccount(t.account || ''); setCurrency(t.currency || 'ILS')
+    setShowAdd(true)
+  }
+
   const saveTx = async () => {
     if (!amount || !desc) return
     setSaving(true)
-    await supabase.from('transactions').insert({
+    const payload = {
       user_id: user.id, type, amount: parseFloat(amount),
       description: desc, category: cat, date, notes: notes || null,
-    })
+      reference: reference || null, account: account || null, currency: currency || 'ILS',
+    }
+    if (editTx) {
+      await supabase.from('transactions').update(payload).eq('id', editTx.id)
+    } else {
+      await supabase.from('transactions').insert(payload)
+    }
     setSaving(false)
     load()
     setShowAdd(false)
-    setAmount(''); setDesc(''); setNotes('')
+    resetForm()
   }
 
   const deleteTx = async (id: string) => {
@@ -246,29 +271,77 @@ export default function Finance({ user }: { user: User }) {
     if (!file) return
     setImportResult('מעבד...')
     const text = await file.text()
-    const lines = text.split('\n').filter(l => l.trim())
+    // Handle BOM
+    const cleaned = text.replace(/^\uFEFF/, '')
+    const lines = cleaned.split(/\r?\n/).filter(l => l.trim())
     let imported = 0, skipped = 0
-    for (const line of lines.slice(1)) { // skip header
-      const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
+
+    // Detect separator
+    const sep = lines[0]?.includes('\t') ? '\t' : ','
+
+    for (const line of lines.slice(1)) {
+      // Parse CSV properly (handle quoted fields)
+      const cols: string[] = []
+      let cur = '', inQ = false
+      for (const ch of line) {
+        if (ch === '"') { inQ = !inQ; continue }
+        if (ch === sep && !inQ) { cols.push(cur.trim()); cur = '' }
+        else cur += ch
+      }
+      cols.push(cur.trim())
+
       if (cols.length < 3) { skipped++; continue }
-      const [dateStr, descStr, amountStr, typeStr, catStr] = cols
-      const amt = Math.abs(parseFloat(amountStr?.replace(/[^\d.-]/g, '') || '0'))
-      if (isNaN(amt) || amt === 0) { skipped++; continue }
-      const txType = typeStr?.toLowerCase().includes('income') || parseFloat(amountStr) > 0 ? 'income' : 'expense'
-      // Try to parse date
-      let parsedDate = dateStr
-      try {
-        const d = new Date(dateStr)
-        if (!isNaN(d.getTime())) parsedDate = format(d, 'yyyy-MM-dd')
-      } catch {}
+
+      const [dateStr, descStr, amountStr, typeStr = '', catStr = ''] = cols
+      const rawAmt = parseFloat((amountStr || '0').replace(/[^\d.-]/g, ''))
+      if (isNaN(rawAmt) || (amountStr || '').trim() === '') { skipped++; continue }
+
+      const amt = Math.abs(rawAmt)
+
+      // Detect type: 1) explicit type column  2) negative amount = expense  3) default expense
+      let txType: 'income'|'expense' = 'expense'
+      const typeNorm = typeStr.toLowerCase().trim()
+      if (typeNorm === 'income' || typeNorm === 'הכנסה' || typeNorm === 'זכות') {
+        txType = 'income'
+      } else if (typeNorm === 'expense' || typeNorm === 'הוצאה' || typeNorm === 'חובה') {
+        txType = 'expense'
+      } else if (rawAmt > 0 && typeStr === '') {
+        // No type column — treat positive as expense (bank statement style)
+        txType = 'expense'
+      } else if (rawAmt < 0) {
+        txType = 'expense'
+      }
+
+      // Parse date
+      let parsedDate = format(new Date(), 'yyyy-MM-dd')
+      if (dateStr) {
+        try {
+          const d = new Date(dateStr.replace(/\./g, '-').replace(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/, '$3-$2-$1'))
+          if (!isNaN(d.getTime())) parsedDate = format(d, 'yyyy-MM-dd')
+        } catch {}
+      }
+
+      // Map category
+      const catMap: Record<string, string> = {
+        salary:'salary', משכורת:'salary', freelance:'freelance', פרילנס:'freelance',
+        bonus:'bonus', בונוס:'bonus', food:'food', אוכל:'food', groceries:'groceries',
+        סופר:'groceries', dining:'dining', מסעדה:'dining', transport:'transport', תחבורה:'transport',
+        housing:'housing', דיור:'housing', שכירות:'housing', entertainment:'entertainment',
+        בידור:'entertainment', health:'health', בריאות:'health', clothing:'clothing',
+        ביגוד:'clothing', subscriptions:'subscriptions', מנויים:'subscriptions',
+        education:'education', חינוך:'education', insurance:'insurance', ביטוח:'insurance',
+        utilities:'utilities', חשבונות:'utilities', invest_in:'invest_in', השקעות:'invest_in',
+      }
+      const category = catMap[catStr.toLowerCase()] || catMap[catStr] || (txType === 'income' ? 'other_in' : 'other')
+
       const { error } = await supabase.from('transactions').insert({
         user_id: user.id, type: txType, amount: amt,
-        description: descStr || 'יבוא CSV', category: catStr || 'other',
-        date: parsedDate || format(new Date(), 'yyyy-MM-dd'),
+        description: descStr || 'יבוא CSV', category,
+        date: parsedDate,
       })
       if (!error) imported++; else skipped++
     }
-    setImportResult(`✅ יובאו ${imported} עסקאות | דולגו ${skipped}`)
+    setImportResult(`✅ יובאו ${imported} עסקאות${skipped > 0 ? ` | דולגו ${skipped}` : ''}`)
     load()
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -408,6 +481,7 @@ export default function Finance({ user }: { user: User }) {
                   <div className={`tx-amount ${t.type}`}>
                     {t.type === 'expense' ? '-' : '+'}₪{t.amount.toLocaleString()}
                   </div>
+                  <button className="tx-btn-icon" onClick={() => openEdit(t)}>✏️</button>
                 </div>
               )
             })}
@@ -448,7 +522,8 @@ export default function Finance({ user }: { user: User }) {
                   <div className={`tx-amount ${t.type}`}>
                     {t.type === 'expense' ? '-' : '+'}₪{t.amount.toLocaleString()}
                   </div>
-                  <button className="sel-del" onClick={() => deleteTx(t.id)} style={{ marginRight: 8 }}>✕</button>
+                  <button className="tx-btn-icon" onClick={() => openEdit(t)} title="עריכה">✏️</button>
+                  <button className="tx-btn-icon" style={{color:'var(--red)'}} onClick={() => deleteTx(t.id)} title="מחק">🗑</button>
                 </div>
               )
             })}
@@ -663,36 +738,75 @@ export default function Finance({ user }: { user: User }) {
         </div>
       )}
 
-      {/* ── Add Transaction Modal ──────────────────────────── */}
+      {/* ── Add / Edit Transaction Modal ──────────────────── */}
       {showAdd && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowAdd(false)}>
-          <div className="modal-card card fade-in" style={{ maxWidth: 480 }}>
-            <div className="modal-header"><h3>עסקה חדשה</h3><button className="modal-close" onClick={() => setShowAdd(false)}>✕</button></div>
-            <div className="modal-form">
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && (setShowAdd(false), resetForm())}>
+          <div className="modal-card card fade-in" style={{ maxWidth: 520 }}>
+            <div className="modal-header">
+              <h3>{editTx ? '✏️ עריכת עסקה' : '+ עסקה חדשה'}</h3>
+              <button className="modal-close" onClick={() => { setShowAdd(false); resetForm() }}>✕</button>
+            </div>
+            <div className="modal-form" style={{ gap: 12 }}>
+              {/* Income / Expense toggle */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <button className={`btn-type ${type === 'expense' ? 'expense' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${type === 'expense' ? 'var(--red)' : 'var(--border)'}`, background: type === 'expense' ? 'rgba(239,68,68,.1)' : 'transparent', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setType('expense'); setCat('food') }}>הוצאה</button>
-                <button className={`btn-type ${type === 'income' ? 'income' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${type === 'income' ? 'var(--green)' : 'var(--border)'}`, background: type === 'income' ? 'rgba(16,185,129,.1)' : 'transparent', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setType('income'); setCat('salary') }}>הכנסה</button>
+                <button style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${type === 'expense' ? 'var(--red)' : 'var(--border)'}`, background: type === 'expense' ? 'rgba(239,68,68,.1)' : 'transparent', cursor: 'pointer', fontWeight: 600, transition: 'all .15s' }} onClick={() => { setType('expense'); setCat('food') }}>💸 הוצאה</button>
+                <button style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${type === 'income' ? 'var(--green)' : 'var(--border)'}`, background: type === 'income' ? 'rgba(16,185,129,.1)' : 'transparent', cursor: 'pointer', fontWeight: 600, transition: 'all .15s' }} onClick={() => { setType('income'); setCat('salary') }}>💰 הכנסה</button>
               </div>
-              <div className="mfield"><label>סכום (₪)</label>
-                <input className="form-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" autoFocus />
+
+              {/* Row 1: Amount + Currency */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 10 }}>
+                <div className="mfield"><label>סכום *</label>
+                  <input className="form-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" autoFocus step="0.01" />
+                </div>
+                <div className="mfield"><label>מטבע</label>
+                  <select className="form-input" value={currency} onChange={e => setCurrency(e.target.value)}>
+                    <option value="ILS">₪ ILS</option>
+                    <option value="USD">$ USD</option>
+                    <option value="EUR">€ EUR</option>
+                    <option value="GBP">£ GBP</option>
+                  </select>
+                </div>
               </div>
-              <div className="mfield"><label>תיאור</label>
-                <input className="form-input" value={desc} onChange={e => setDesc(e.target.value)} placeholder="תיאור העסקה" />
+
+              {/* Row 2: Description */}
+              <div className="mfield"><label>תיאור *</label>
+                <input className="form-input" value={desc} onChange={e => setDesc(e.target.value)} placeholder="תיאור העסקה (לדוג׳ סופר, משכורת, ארנונה...)" />
               </div>
-              <div className="mfield"><label>קטגוריה</label>
-                <select className="form-input" value={cat} onChange={e => setCat(e.target.value)}>
-                  {CATS[type].map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
-                </select>
+
+              {/* Row 3: Category + Date */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="mfield"><label>קטגוריה</label>
+                  <select className="form-input" value={cat} onChange={e => setCat(e.target.value)}>
+                    {CATS[type].map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+                  </select>
+                </div>
+                <div className="mfield"><label>תאריך</label>
+                  <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+                </div>
               </div>
-              <div className="mfield"><label>תאריך</label>
-                <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+
+              {/* Row 4: Account + Reference */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="mfield"><label>חשבון / כרטיס</label>
+                  <input className="form-input" value={account} onChange={e => setAccount(e.target.value)} placeholder="לדוג׳ ויזה 1234, הפועלים" />
+                </div>
+                <div className="mfield"><label>אסמכתא / מס׳ מסמך</label>
+                  <input className="form-input" value={reference} onChange={e => setReference(e.target.value)} placeholder="לדוג׳ 123456" />
+                </div>
               </div>
-              <div className="mfield"><label>הערות (אופציונלי)</label>
-                <input className="form-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="הערות..." />
+
+              {/* Row 5: Notes */}
+              <div className="mfield"><label>הערות</label>
+                <input className="form-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="הערות נוספות..." />
               </div>
+
               <div className="modal-actions">
-                <button className="btn-ghost" onClick={() => setShowAdd(false)}>ביטול</button>
-                <button className="btn-gold" onClick={saveTx} disabled={saving}>{saving ? 'שומר...' : 'שמור'}</button>
+                {editTx && (
+                  <button className="btn-ghost" style={{ color: 'var(--red)', marginRight: 'auto' }}
+                    onClick={() => { deleteTx(editTx.id); setShowAdd(false); resetForm() }}>🗑 מחק</button>
+                )}
+                <button className="btn-ghost" onClick={() => { setShowAdd(false); resetForm() }}>ביטול</button>
+                <button className="btn-gold" onClick={saveTx} disabled={saving}>{saving ? 'שומר...' : (editTx ? 'עדכן' : 'שמור')}</button>
               </div>
             </div>
           </div>
