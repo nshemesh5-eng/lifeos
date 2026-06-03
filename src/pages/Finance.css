@@ -74,3 +74,65 @@
 .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
 
 @media (max-width:900px) { .fin-hero { grid-template-columns:1fr; } .fin-hero-stats { flex-direction:row; } .fin-overview-grid { grid-template-columns:1fr; } .fin-rec-summary { grid-template-columns:1fr; } }
+
+/* ─── KPI Strip ─────────────────────────────────────── */
+.fin-kpi-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.fin-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.fin-kpi-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+.fin-kpi-val { font-size: 20px; font-weight: 700; }
+
+/* ─── Tabs ───────────────────────────────────────────── */
+.fin-tabs-row { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.fin-tab { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 13px; color: var(--text2); transition: all .15s; }
+.fin-tab:hover { background: var(--surface2); }
+.fin-tab.active { background: var(--amber); color: #000; border-color: var(--amber); font-weight: 600; }
+
+/* ─── Overview grid ──────────────────────────────────── */
+.fin-overview { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ─── Mini chart ─────────────────────────────────────── */
+.mini-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-bottom: 20px; position: relative; }
+.mini-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; }
+.mini-bars { display: flex; gap: 3px; align-items: flex-end; flex: 1; width: 100%; }
+.mini-bar { flex: 1; min-height: 2px; border-radius: 3px 3px 0 0; transition: height .3s; }
+.mini-bar.income { background: var(--green); }
+.mini-bar.expense { background: var(--red); opacity: .8; }
+.mini-label { font-size: 10px; color: var(--text3); margin-top: 4px; }
+.mini-legend { position: absolute; bottom: -2px; left: 0; right: 0; display: flex; gap: 12px; justify-content: center; font-size: 11px; color: var(--text3); }
+.mini-legend span { display: flex; align-items: center; gap: 4px; }
+.mini-legend span span { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+/* ─── Transaction rows ───────────────────────────────── */
+.tx-list { display: flex; flex-direction: column; gap: 6px; }
+.tx-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+.tx-emoji { font-size: 20px; flex-shrink: 0; }
+.tx-info { flex: 1; min-width: 0; }
+.tx-desc { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: 11px; color: var(--text3); }
+.tx-amount { font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.tx-amount.income { color: var(--green); }
+.tx-amount.expense { color: var(--red); }
+
+/* ─── Filters ────────────────────────────────────────── */
+.fin-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+
+/* ─── Budgets ────────────────────────────────────────── */
+.budgets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.budget-card { padding: 14px; }
+
+/* ─── Goals ──────────────────────────────────────────── */
+.goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.goal-card { padding: 18px; }
+
+/* ─── Toggle (reuse from reminders) ─────────────────── */
+.toggle-switch { position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 20px; transition: .2s; }
+.toggle-track::after { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.toggle-switch input:checked + .toggle-track { background: var(--green); }
+.toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+
+@media (max-width: 600px) {
+  .fin-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .fin-overview { grid-template-columns: 1fr; }
+}
