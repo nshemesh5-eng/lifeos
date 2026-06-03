@@ -18,6 +18,9 @@ import Sidebar from './components/Sidebar'
 import ShimshonChat from './components/ShimshonChat'
 import './App.css'
 
+const THEMES = ['dark','light','midnight','warm'] as const
+type Theme = typeof THEMES[number]
+
 function buildContext(tasks: any[], habits: any[], habitLogs: any[], reminders: any[], transactions: any[]): LifeContext {
   const now = new Date()
   const today = format(now, 'yyyy-MM-dd')
@@ -40,13 +43,30 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState('dashboard')
-  const navigate = (p: string) => { setPage(p); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50) }
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('shimshon-theme') as Theme) || 'dark')
+  const [aiOpen, setAiOpen] = useState(true)
   const [briefing, setBriefing] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
   const [habits, setHabits] = useState<any[]>([])
   const [habitLogs, setHabitLogs] = useState<any[]>([])
   const [reminders, setReminders] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
+
+  const navigate = (p: string) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+
+  // Theme
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('shimshon-theme', theme)
+  }, [theme])
+
+  const cycleTheme = () => {
+    const idx = THEMES.indexOf(theme)
+    setTheme(THEMES[(idx + 1) % THEMES.length])
+  }
+
+  const THEME_ICONS: Record<Theme, string> = { dark: '🌙', light: '☀️', midnight: '✦', warm: '🕯️' }
+  const THEME_LABELS: Record<Theme, string> = { dark: 'כהה', light: 'בהיר', midnight: 'חשכה', warm: 'חם' }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -74,20 +94,24 @@ export default function App() {
 
   const context = buildContext(tasks, habits, habitLogs, reminders, transactions)
 
-  // Fetch briefing ONCE, 4 seconds after login (let data load first, avoid rate limits)
   const briefingFetched = useRef(false)
   useEffect(() => {
     if (!user || briefingFetched.current) return
     briefingFetched.current = true
-    // Delay to let Supabase data load and avoid competing API calls
     const timer = setTimeout(() => {
       getDailyBriefing(context).then(setBriefing)
     }, 4000)
     return () => clearTimeout(timer)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
-  if (loading) return <div className="app-loading"><div className="app-loading-icon">ש</div></div>
+  if (loading) return (
+    <div className="app-loading">
+      <div className="app-loading-inner">
+        <div className="app-loading-icon">ש</div>
+        <div className="app-loading-label">שמשון</div>
+      </div>
+    </div>
+  )
   if (!user) return <Auth />
 
   const renderPage = () => {
@@ -105,17 +129,59 @@ export default function App() {
     }
   }
 
+  const now = new Date()
+  const hour = now.getHours()
+  const timeGreet = hour < 5 ? 'לילה טוב' : hour < 12 ? 'בוקר טוב' : hour < 17 ? 'שלום' : hour < 21 ? 'ערב טוב' : 'לילה טוב'
+
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${aiOpen ? 'ai-open' : ''}`}>
       <Sidebar active={page} onNavigate={navigate} userName={user.email?.split('@')[0]} />
+      
       <main className="app-main">
-        <div className="app-topbar">
-          <div />
-          <button className="btn-ghost app-signout" onClick={() => supabase.auth.signOut()}>יציאה</button>
-        </div>
-        <div className="app-content page-container">{renderPage()}</div>
+        {/* Top Bar */}
+        <header className="app-topbar">
+          <div className="app-topbar-right">
+            <div className="app-greeting">
+              <span className="app-greet-text">{timeGreet}</span>
+              <span className="app-greet-dot">·</span>
+              <span className="app-greet-date">{format(now, "EEEE, d בMMMM", { locale: he })}</span>
+            </div>
+          </div>
+          <div className="app-topbar-left">
+            {/* Theme toggle */}
+            <button className="app-theme-btn" onClick={cycleTheme} title="החלף ערכת צבעים">
+              <span>{THEME_ICONS[theme]}</span>
+              <span className="app-theme-label">{THEME_LABELS[theme]}</span>
+            </button>
+            {/* AI toggle */}
+            <button className={`app-ai-toggle ${aiOpen ? 'active' : ''}`} onClick={() => setAiOpen(p => !p)} title="שמשון AI">
+              <span className="app-ai-dot" />
+              <span>שמשון</span>
+            </button>
+            {/* Sign out */}
+            <button className="btn-ghost app-signout" onClick={() => supabase.auth.signOut()} style={{ fontSize: 12 }}>
+              יציאה
+            </button>
+          </div>
+        </header>
+
+        <div className="app-content fade-in">{renderPage()}</div>
       </main>
-      <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} />
+
+      {/* Shimshon AI — always visible panel */}
+      <aside className={`ai-panel ${aiOpen ? 'open' : 'closed'}`}>
+        <div className="ai-panel-header">
+          <div className="ai-panel-title">
+            <div className="ai-panel-avatar">ש</div>
+            <div>
+              <div className="ai-panel-name">שמשון</div>
+              <div className="ai-panel-status"><span className="ai-status-dot"/>מוכן לעזור</div>
+            </div>
+          </div>
+          <button className="btn-icon" onClick={() => setAiOpen(false)} style={{ fontSize: 12 }}>✕</button>
+        </div>
+        <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} embedded />
+      </aside>
     </div>
   )
 }
