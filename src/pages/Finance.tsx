@@ -273,6 +273,27 @@ export default function Finance({ user }: { user: User }) {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  // ── Download example CSV ──────────────────────────────
+  const downloadExample = () => {
+    const BOM = '\uFEFF'
+    const example = `תאריך,תיאור,סכום,סוג,קטגוריה
+2026-06-01,משכורת יוני,15000,income,salary
+2026-06-02,סופר יוחננוף,320,expense,groceries
+2026-06-03,טדי קפה,45,expense,dining
+2026-06-04,נסיעות רכבת,180,expense,transport
+2026-06-05,נטפליקס,60,expense,subscriptions
+2026-06-08,ארוחת צהריים,220,expense,food
+2026-06-10,בונוס רבעוני,3000,income,bonus
+2026-06-12,שכירות,4500,expense,housing
+2026-06-15,קולנוע,90,expense,entertainment
+2026-06-18,ביטוח בריאות,290,expense,insurance`
+    const blob = new Blob([BOM + example], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url
+    a.download = 'shimshon-finance-example.csv'
+    a.click()
+  }
+
   // ── Export ────────────────────────────────────────────
   const exportCSV = () => {
     const BOM = '\uFEFF'
@@ -559,14 +580,33 @@ export default function Finance({ user }: { user: User }) {
           {/* CSV Import */}
           <div className="card" style={{ padding: 24 }}>
             <h3 style={{ marginBottom: 8 }}>📥 ייבוא מקובץ CSV</h3>
-            <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
-              ייבא עסקאות מקובץ CSV. הפורמט הנדרש: <code>תאריך, תיאור, סכום, סוג (income/expense), קטגוריה</code>
+            <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 8 }}>
+              העלה קובץ CSV עם עסקאות. הפורמט הנדרש: 5 עמודות לפי הסדר:
             </p>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.txt" onChange={handleImport}
-                style={{ fontSize: 13 }} />
-              {importResult && <span style={{ fontSize: 13, color: importResult.includes('✅') ? 'var(--green)' : 'var(--red)' }}>{importResult}</span>}
+            <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontFamily: 'monospace', fontSize: 12, color: 'var(--text2)' }}>
+              <div style={{ color: 'var(--amber)', marginBottom: 4, fontFamily: 'inherit' }}>תאריך, תיאור, סכום, סוג, קטגוריה</div>
+              <div>2026-06-01, משכורת יוני, 15000, <span style={{color:'var(--green)'}}>income</span>, salary</div>
+              <div>2026-06-02, סופר, 320, <span style={{color:'var(--red)'}}>expense</span>, groceries</div>
+              <div>2026-06-05, נטפליקס, 60, <span style={{color:'var(--red)'}}>expense</span>, subscriptions</div>
             </div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>
+              <b>סוג:</b> income / expense &nbsp;|&nbsp;
+              <b>קטגוריות:</b> salary, freelance, bonus, food, groceries, dining, transport, housing, entertainment, health, clothing, subscriptions, education, insurance, utilities, other
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button className="btn-ghost" style={{ fontSize: 12 }} onClick={downloadExample}>
+                📄 הורד קובץ לדוגמה
+              </button>
+              <span style={{ color: 'var(--text3)', fontSize: 12 }}>←</span>
+              <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ fontSize: 13, flex: 1 }} />
+            </div>
+            {importResult && (
+              <div style={{ marginTop: 10, fontSize: 13, padding: '8px 12px', borderRadius: 8,
+                background: importResult.includes('✅') ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)',
+                color: importResult.includes('✅') ? 'var(--green)' : 'var(--red)' }}>
+                {importResult}
+              </div>
+            )}
           </div>
           {/* Export */}
           <div className="card" style={{ padding: 24 }}>
@@ -584,16 +624,40 @@ export default function Finance({ user }: { user: User }) {
               }}>⬇️ ייצוא JSON</button>
             </div>
           </div>
-          {/* Open Banking - Coming Soon */}
-          <div className="card" style={{ padding: 24, border: '1px dashed var(--amber)' }}>
-            <h3 style={{ marginBottom: 8 }}>🏦 בנקאות פתוחה — בקרוב</h3>
-            <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12 }}>
-              סנכרון אוטומטי של עסקאות מחשבון הבנק וכרטיס האשראי שלך — ללא הזנה ידנית.
+          {/* Open Banking */}
+          <div className="card" style={{ padding: 24, border: '1px solid color-mix(in srgb, var(--amber) 40%, transparent)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 28 }}>🏦</span>
+              <div>
+                <h3 style={{ margin: 0 }}>בנקאות פתוחה</h3>
+                <span style={{ fontSize: 11, background: 'var(--amber)', color: '#000', borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>בקרוב</span>
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
+              סנכרון אוטומטי של עסקאות ישירות מחשבון הבנק וכרטיס האשראי שלך — ללא הזנה ידנית.
+              עסקאות יכנסו לשמשון אוטומטית ברגע שהן מתבצעות.
             </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {['🏦 בנק הפועלים', '🏦 לאומי', '🏦 דיסקונט', '🏦 מזרחי', '💳 ישראכרט', '💳 כאל', '💳 מקס'].map(b => (
-                <span key={b} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', fontSize: 12 }}>{b}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              {[
+                { emoji: '🏦', name: 'בנק הפועלים', status: 'נתמך' },
+                { emoji: '🏦', name: 'לאומי', status: 'נתמך' },
+                { emoji: '🏦', name: 'דיסקונט', status: 'נתמך' },
+                { emoji: '🏦', name: 'מזרחי טפחות', status: 'נתמך' },
+                { emoji: '💳', name: 'ישראכרט', status: 'נתמך' },
+                { emoji: '💳', name: 'כאל', status: 'נתמך' },
+                { emoji: '💳', name: 'מקס (לאומי קארד)', status: 'נתמך' },
+                { emoji: '💳', name: 'אמריקן אקספרס', status: 'בפיתוח' },
+              ].map(b => (
+                <div key={b.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 13 }}>
+                  <span>{b.emoji}</span>
+                  <span style={{ flex: 1 }}>{b.name}</span>
+                  <span style={{ fontSize: 11, color: b.status === 'נתמך' ? 'var(--green)' : 'var(--text3)' }}>● {b.status}</span>
+                </div>
               ))}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+              <b style={{ color: 'var(--text2)' }}>מה נדרש לפיתוח:</b> חיבור ל-Salt Edge API (ספק Open Banking ישראלי) + הרשאת גישה בנקאית מהמשתמש + הצפנת credentials.
+              זמן פיתוח משוער: ~2 שעות עבודה.
             </div>
           </div>
         </div>
