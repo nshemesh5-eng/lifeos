@@ -136,3 +136,7 @@
   .fin-kpi-strip { grid-template-columns: repeat(2, 1fr); }
   .fin-overview { grid-template-columns: 1fr; }
 }
+/* ─── Edit/delete icon buttons ────────────────────────── */
+.tx-btn-icon { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 6px; opacity: 0; transition: opacity .15s, background .15s; }
+.tx-row:hover .tx-btn-icon { opacity: 1; }
+.tx-btn-icon:hover { background: var(--surface2); }
