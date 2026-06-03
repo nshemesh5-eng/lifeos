@@ -141,3 +141,168 @@
 .ex-instructions { display: flex; flex-direction: column; gap: 8px; }
 .ex-step { display: flex; gap: 10px; font-size: 13px; line-height: 1.5; }
 .ex-step-num { width: 22px; height: 22px; border-radius: 6px; background: var(--surface3); color: var(--text3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+/* ══════════════════════════════════════════════════════
+   VISUAL UPGRADE — Colors, Infographics, Character
+   ══════════════════════════════════════════════════════ */
+
+/* ─── Gradient background for next card ─────────────── */
+.wo-next-card {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--m-workout) 6%, var(--surface)) 0%,
+    var(--surface) 60%
+  ) !important;
+  border-color: color-mix(in srgb, var(--m-workout) 20%, transparent) !important;
+  position: relative;
+  overflow: hidden;
+}
+.wo-next-card::before {
+  content: '';
+  position: absolute;
+  top: -80px; left: -80px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--m-workout) 12%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Badge glowing dot ──────────────────────────────── */
+.wo-next-dot {
+  box-shadow: 0 0 6px var(--m-workout);
+}
+
+/* ─── Timing chips — vivid colored ──────────────────── */
+.wo-timing-chip {
+  border-radius: 14px;
+  transition: transform 0.15s;
+}
+.wo-timing-chip:hover { transform: translateY(-1px); }
+.wo-timing-chip > span { font-size: 20px; }
+.wo-timing-val { font-size: 14px !important; }
+
+/* ─── Muscle map — larger, more vivid ───────────────── */
+.wo-muscle-map-wrap {
+  background: linear-gradient(135deg, var(--surface2), var(--surface3));
+  border: 0.5px solid var(--border2);
+  border-radius: 16px;
+  padding: 14px 10px;
+}
+.muscle-map-svg { width: 130px !important; height: auto; }
+
+/* ─── Program day items ──────────────────────────────── */
+.wo-prog-day-item.next {
+  background: linear-gradient(90deg, var(--red-dim), transparent) !important;
+  box-shadow: inset 0 0 0 1px var(--m-workout);
+}
+
+/* ─── Volume rings — glow effect ────────────────────── */
+.vol-ring-wrap svg circle:last-of-type {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+.wo-kpi-row {
+  background: linear-gradient(180deg, var(--surface2), transparent);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+/* ─── Heatmap — color gradient active cells ──────────── */
+.wo-hm-cell.active {
+  box-shadow: 0 0 6px color-mix(in srgb, var(--m-workout) 50%, transparent);
+}
+.wo-hm-cell.today {
+  box-shadow: 0 0 8px var(--gold), 0 0 0 2px var(--gold) !important;
+}
+.wo-heatmap-card {
+  background: linear-gradient(135deg, var(--surface), var(--surface2)) !important;
+}
+
+/* ─── Streak fire number ─────────────────────────────── */
+.wo-streak-hero {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 32px; font-weight: 900; letter-spacing: -0.04em;
+  color: var(--amber);
+  text-shadow: 0 0 20px rgba(245,158,11,0.4);
+  animation: fireGlow 2s ease-in-out infinite alternate;
+}
+@keyframes fireGlow {
+  from { text-shadow: 0 0 10px rgba(245,158,11,0.3); }
+  to   { text-shadow: 0 0 30px rgba(245,158,11,0.7), 0 0 60px rgba(244,63,94,0.2); }
+}
+
+/* ─── Start button — gradient ────────────────────────── */
+.wo-start-btn {
+  background: linear-gradient(135deg, #F43F5E, #E11D48) !important;
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.35);
+  transition: box-shadow 0.2s, transform 0.15s !important;
+  letter-spacing: 0.02em;
+}
+.wo-start-btn:hover {
+  box-shadow: 0 6px 28px rgba(244, 63, 94, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ─── Tab bar upgrade ────────────────────────────────── */
+.tab-bar {
+  background: var(--surface) !important;
+  border: 0.5px solid var(--border2) !important;
+  box-shadow: var(--shadow-sm);
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--m-workout), color-mix(in srgb, var(--m-workout) 70%, var(--purple))) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 12px rgba(244, 63, 94, 0.3) !important;
+}
+
+/* ─── PR rows — colored bars ─────────────────────────── */
+.wo-pr-row { position: relative; }
+.wo-pr-card {
+  background: linear-gradient(135deg, var(--surface), var(--surface2)) !important;
+}
+
+/* ─── Set row — colored type ─────────────────────────── */
+.wo-set-row { border-right: 2px solid var(--m-workout); }
+
+/* ─── Rest box — pulsing ─────────────────────────────── */
+.wo-rest-box {
+  animation: restPulse 1s ease-in-out infinite alternate;
+}
+@keyframes restPulse {
+  from { box-shadow: 0 0 0 0 rgba(245,158,11,0.2); }
+  to   { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+}
+
+/* ─── Active workout timer — glow ────────────────────── */
+.wo-active-timer {
+  text-shadow: 0 0 20px color-mix(in srgb, var(--m-workout) 40%, transparent);
+}
+
+/* ─── Module title glow ──────────────────────────────── */
+.module-title span[style*="m-workout"] {
+  filter: drop-shadow(0 0 8px var(--m-workout));
+}
+
+/* ─── Next card title gradient ───────────────────────── */
+.wo-next-title {
+  background: linear-gradient(135deg, var(--text), color-mix(in srgb, var(--text) 70%, var(--m-workout)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Recent rows upgrade ────────────────────────────── */
+.wo-recent-card {
+  background: var(--surface) !important;
+}
+.wo-recent-row:hover { background: var(--surface2); border-radius: 8px; margin: 0 -8px; padding: 8px; }
+
+/* ─── Shimshon character in workout ─────────────────── */
+.wo-character {
+  position: absolute;
+  bottom: 0; left: 20px;
+  opacity: 0.06;
+  pointer-events: none;
+  user-select: none;
+  font-size: 120px;
+  filter: grayscale(1);
+}
