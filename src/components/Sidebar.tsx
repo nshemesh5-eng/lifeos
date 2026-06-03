@@ -7,20 +7,21 @@ interface Props {
 }
 
 const NAV = [
-  { id: 'dashboard', icon: '⬡', label: 'מבט על',    color: 'var(--gold)' },
-  { id: 'finance',   icon: '₪',  label: 'פיננסים',  color: 'var(--m-finance)' },
-  { id: 'workout',   icon: '◈',  label: 'אימונים',  color: 'var(--m-workout)' },
-  { id: 'nutrition', icon: '🥗', label: 'תזונה',    color: 'var(--m-food)' },
-  { id: 'calendar',  icon: '▦',  label: 'לוח שנה',  color: 'var(--m-calendar)' },
-  { id: 'tasks',     icon: '☰',  label: 'משימות',   color: 'var(--m-tasks)' },
-  { id: 'habits',    icon: '◎',  label: 'הרגלים',   color: 'var(--m-habits)' },
-  { id: 'invest',    icon: '△',  label: 'השקעות',   color: 'var(--m-invest)' },
-  { id: 'reminders', icon: '◷',  label: 'תזכורות',  color: 'var(--m-remind)' },
+  { id: 'dashboard', icon: '⊞',  label: 'מבט על',    color: 'var(--gold)',       section: null },
+  { id: 'finance',   icon: '₪',  label: 'פיננסים',   color: 'var(--m-finance)',  section: 'חיים' },
+  { id: 'invest',    icon: '△',  label: 'השקעות',    color: 'var(--m-invest)',   section: null },
+  { id: 'workout',   icon: '◈',  label: 'אימונים',   color: 'var(--m-workout)',  section: null },
+  { id: 'nutrition', icon: '🥗', label: 'תזונה',     color: 'var(--m-food)',     section: null },
+  { id: 'calendar',  icon: '▦',  label: 'לוח שנה',   color: 'var(--m-calendar)', section: 'ארגון' },
+  { id: 'tasks',     icon: '☰',  label: 'משימות',    color: 'var(--m-tasks)',    section: null },
+  { id: 'habits',    icon: '◎',  label: 'הרגלים',    color: 'var(--m-habits)',   section: null },
+  { id: 'reminders', icon: '◷',  label: 'תזכורות',   color: 'var(--m-remind)',   section: null },
 ]
 
 export default function Sidebar({ active, onNavigate, userName }: Props) {
   return (
     <aside className="sidebar">
+      {/* Logo */}
       <div className="sidebar-logo" onClick={() => onNavigate('dashboard')}>
         <div className="sidebar-logo-icon">ש</div>
         <div>
@@ -29,24 +30,37 @@ export default function Sidebar({ active, onNavigate, userName }: Props) {
         </div>
       </div>
 
+      {/* Navigation */}
       <nav className="sidebar-nav">
-        {NAV.map(item => (
-          <button
-            key={item.id}
-            className={`sidebar-item ${active === item.id ? 'active' : ''}`}
-            style={active === item.id ? { '--item-color': item.color } as React.CSSProperties : {}}
-            onClick={() => onNavigate(item.id)}
-          >
-            <span className="sidebar-icon"
-              style={active === item.id ? { color: item.color } : {}}>
-              {item.icon}
-            </span>
-            <span className="sidebar-label">{item.label}</span>
-            {active === item.id && <span className="sidebar-dot" style={{ background: item.color }} />}
-          </button>
-        ))}
+        {NAV.map(item => {
+          const isActive = active === item.id
+          return (
+            <div key={item.id}>
+              {item.section && (
+                <div className="sidebar-section-label">{item.section}</div>
+              )}
+              <button
+                className={`sidebar-item ${isActive ? 'active' : ''}`}
+                style={isActive ? { '--item-color': item.color + '22' } as React.CSSProperties : {}}
+                onClick={() => onNavigate(item.id)}
+              >
+                <span
+                  className="sidebar-icon"
+                  style={isActive ? { color: item.color } : {}}
+                >
+                  {item.icon}
+                </span>
+                <span className="sidebar-label">{item.label}</span>
+                {isActive && (
+                  <span className="sidebar-dot" style={{ background: item.color }} />
+                )}
+              </button>
+            </div>
+          )
+        })}
       </nav>
 
+      {/* Footer */}
       <div className="sidebar-footer">
         <div className="sidebar-user">
           <div className="sidebar-avatar">{userName?.[0]?.toUpperCase() || 'א'}</div>
