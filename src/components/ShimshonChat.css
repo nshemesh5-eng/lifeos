@@ -158,3 +158,16 @@
   .shimshon-panel { left: 12px; right: 12px; width: auto; bottom: 84px; }
   .shimshon-fab { left: 20px; bottom: 20px; }
 }
+
+/* ─── Embedded mode ──────────────────────────────────── */
+.shimshon-embedded {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+.shimshon-embedded-msgs {
+  position: static !important; flex: 1;
+  overflow-y: auto; padding: 12px;
+}
+.shimshon-embedded-input {
+  flex-shrink: 0; position: static !important;
+  border-top: 0.5px solid var(--border); border-radius: 0;
+}
