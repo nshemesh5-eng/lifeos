@@ -21,8 +21,14 @@ const CAT_LABELS: Record<string,string> = {
 
 function StatCard({ icon, label, value, sub, color, onClick }: any) {
   return (
-    <div className="dash-stat-card card card-hover" onClick={onClick}>
-      <div className="dash-stat-icon" style={{color, background: color + '15'}}>{icon}</div>
+    <div className="dash-stat-card card card-hover" onClick={onClick}
+      style={{'--card-glow': color} as React.CSSProperties}>
+      <div className="dash-stat-icon" style={{
+        color,
+        background: `linear-gradient(135deg, ${color}22, ${color}10)`,
+        border: `0.5px solid ${color}25`,
+        boxShadow: `0 0 12px ${color}15`,
+      }}>{icon}</div>
       <div className="dash-stat-body">
         <div className="dash-stat-label">{label}</div>
         <div className="dash-stat-value" style={{color}}>{value}</div>
