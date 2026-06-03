@@ -3,6 +3,7 @@ import { askShimshon, ShimshonMessage, LifeContext, detectNavIntent } from '../l
 import './ShimshonChat.css'
 
 interface Props {
+  embedded?: boolean
   context: LifeContext
   briefing?: string
   onNavigate?: (page: string) => void
@@ -19,7 +20,7 @@ const PAGE_LABELS: Record<string, string> = {
   habits:'◎ הרגלים', reminders:'◷ תזכורות', invest:'△ השקעות', nutrition:'🥗 תזונה',
 }
 
-export default function ShimshonChat({ context, briefing, onNavigate }: Props) {
+export default function ShimshonChat({ context, briefing, onNavigate, embedded }: Props) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ShimshonMessage[]>([])
   const [input, setInput] = useState('')
@@ -65,6 +66,53 @@ export default function ShimshonChat({ context, briefing, onNavigate }: Props) {
     'איך אני עומד תקציבית?',
     'מה לא עשיתי עדיין?',
   ]
+
+  // Embedded mode — render just the chat content (for AI panel)
+  if (embedded) {
+    return (
+      <div className="shimshon-embedded">
+        <div className="shimshon-messages shimshon-embedded-msgs">
+          {messages.length === 0 && (
+            <div className="shimshon-empty-state">
+              <div className="shimshon-empty-av">ש</div>
+              <p>מה אפשר לעשות בשבילך?</p>
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} className={`shimshon-msg ${m.role === 'user' ? 'shimshon-user' : 'shimshon-ai'}`}>
+              <div className="shimshon-bubble">{m.content}</div>
+            </div>
+          ))}
+          {loading && (
+            <div className="shimshon-msg shimshon-ai">
+              <div className="shimshon-bubble shimshon-typing"><span /><span /><span /></div>
+            </div>
+          )}
+          {navSuggest && onNavigate && (
+            <div className="shimshon-nav-chip fade-in">
+              <span>פתח: {PAGE_LABELS[navSuggest]}</span>
+              <button onClick={() => { onNavigate(navSuggest); setNavSuggest(null) }}>פתח ←</button>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+        {messages.length === 0 && (
+          <div className="shimshon-quick" style={{padding:'0 12px'}}>
+            {quickActions.slice(0,3).map(q => (
+              <button key={q} className="shimshon-quick-btn" onClick={() => send(q)}>{q}</button>
+            ))}
+          </div>
+        )}
+        <div className="shimshon-input-area shimshon-embedded-input">
+          <input className="shimshon-input" value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+            placeholder="שאל את שמשון..." />
+          <button className="shimshon-send" onClick={() => send()} disabled={!input.trim() || loading}>←</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
