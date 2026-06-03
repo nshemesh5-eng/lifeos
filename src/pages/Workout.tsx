@@ -55,9 +55,13 @@ const IMG_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/mai
 
 // ── Muscle SVG Map (simplified human body) ──────────────
 function MuscleMap({ trained }: { trained: string[] }) {
+  const hasAny = trained.length > 0
   const isActive = (muscle: string) =>
     trained.some(t => t.toLowerCase().includes(muscle.toLowerCase()) ||
       muscle.toLowerCase().includes(t.toLowerCase()))
+  // When no selection, show all at low opacity to indicate it's a body map
+  const getOpacity = (active: boolean, baseHigh: number, baseLow: number) =>
+    active ? baseHigh : (hasAny ? baseLow * 0.4 : baseLow)
   return (
     <svg viewBox="0 0 120 200" className="muscle-map-svg" aria-label="מפת שרירים">
       {/* Body outline */}
@@ -65,57 +69,57 @@ function MuscleMap({ trained }: { trained: string[] }) {
       {/* Chest */}
       <path d="M44 52 Q52 48 60 50 Q68 48 76 52 L74 64 Q66 62 60 64 Q54 62 46 64 Z"
         fill={isActive('chest') ? '#F43F5E' : 'var(--surface3)'}
-        opacity={isActive('chest') ? 0.8 : 0.4} className="muscle-part" data-muscle="chest"/>
+        opacity={getOpacity(isActive('chest'), 0.8, 0.4)} className="muscle-part" data-muscle="chest"/>
       {/* Shoulders */}
       <ellipse cx="36" cy="52" rx="9" ry="8"
         fill={isActive('shoulders') ? '#3B82F6' : 'var(--surface3)'}
-        opacity={isActive('shoulders') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('shoulders'), 0.8, 0.4)}/>
       <ellipse cx="84" cy="52" rx="9" ry="8"
         fill={isActive('shoulders') ? '#3B82F6' : 'var(--surface3)'}
-        opacity={isActive('shoulders') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('shoulders'), 0.8, 0.4)}/>
       {/* Biceps */}
       <rect x="26" y="60" width="12" height="24" rx="6"
         fill={isActive('biceps') ? '#10B981' : 'var(--surface3)'}
-        opacity={isActive('biceps') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('biceps'), 0.8, 0.4)}/>
       <rect x="82" y="60" width="12" height="24" rx="6"
         fill={isActive('biceps') ? '#10B981' : 'var(--surface3)'}
-        opacity={isActive('biceps') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('biceps'), 0.8, 0.4)}/>
       {/* Triceps */}
       <rect x="24" y="62" width="10" height="20" rx="5"
         fill={isActive('triceps') ? '#8B5CF6' : 'var(--surface3)'}
-        opacity={isActive('triceps') ? 0.7 : 0.3}/>
+        opacity={getOpacity(isActive('triceps'), 0.7, 0.3)}/>
       <rect x="86" y="62" width="10" height="20" rx="5"
         fill={isActive('triceps') ? '#8B5CF6' : 'var(--surface3)'}
-        opacity={isActive('triceps') ? 0.7 : 0.3}/>
+        opacity={getOpacity(isActive('triceps'), 0.7, 0.3)}/>
       {/* Abs */}
       <rect x="52" y="66" width="16" height="28" rx="4"
         fill={isActive('abdominals') ? '#F59E0B' : 'var(--surface3)'}
-        opacity={isActive('abdominals') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('abdominals'), 0.8, 0.4)}/>
       {/* Lats */}
       <path d="M44 54 L40 76 Q52 80 60 78 Q68 80 80 76 L76 54 Q68 58 60 60 Q52 58 44 54Z"
         fill={isActive('lats') || isActive('back') ? '#14B8A6' : 'var(--surface3)'}
-        opacity={isActive('lats') || isActive('back') ? 0.5 : 0.2}/>
+        opacity={getOpacity(isActive('lats') || isActive('back'), 0.5, 0.2)}/>
       {/* Quads */}
       <rect x="44" y="100" width="14" height="38" rx="7"
         fill={isActive('quadriceps') || isActive('legs') ? '#F59E0B' : 'var(--surface3)'}
-        opacity={isActive('quadriceps') || isActive('legs') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('quadriceps') || isActive('legs'), 0.8, 0.4)}/>
       <rect x="62" y="100" width="14" height="38" rx="7"
         fill={isActive('quadriceps') || isActive('legs') ? '#F59E0B' : 'var(--surface3)'}
-        opacity={isActive('quadriceps') || isActive('legs') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('quadriceps') || isActive('legs'), 0.8, 0.4)}/>
       {/* Calves */}
       <rect x="44" y="142" width="12" height="28" rx="6"
         fill={isActive('calves') || isActive('legs') ? '#10B981' : 'var(--surface3)'}
-        opacity={isActive('calves') || isActive('legs') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('calves') || isActive('legs'), 0.8, 0.4)}/>
       <rect x="64" y="142" width="12" height="28" rx="6"
         fill={isActive('calves') || isActive('legs') ? '#10B981' : 'var(--surface3)'}
-        opacity={isActive('calves') || isActive('legs') ? 0.8 : 0.4}/>
+        opacity={getOpacity(isActive('calves') || isActive('legs'), 0.8, 0.4)}/>
       {/* Glutes */}
       <ellipse cx="51" cy="98" rx="9" ry="8"
         fill={isActive('glutes') ? '#EC4899' : 'var(--surface3)'}
-        opacity={isActive('glutes') ? 0.7 : 0.3}/>
+        opacity={getOpacity(isActive('glutes'), 0.7, 0.3)}/>
       <ellipse cx="69" cy="98" rx="9" ry="8"
         fill={isActive('glutes') ? '#EC4899' : 'var(--surface3)'}
-        opacity={isActive('glutes') ? 0.7 : 0.3}/>
+        opacity={getOpacity(isActive('glutes'), 0.7, 0.3)}/>
     </svg>
   )
 }
