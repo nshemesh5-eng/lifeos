@@ -399,6 +399,14 @@ export default function Workout({ user }: { user: User }) {
               </div>
             </div>
 
+            {/* Streak counter */}
+            {streak > 0 && (
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0'}}>
+                <div className="wo-streak-hero">🔥 {streak}</div>
+                <div style={{fontSize:12,color:'var(--text3)'}}>ימי streak רצופים</div>
+              </div>
+            )}
+
             {/* Muscle map + program progress */}
             <div className="wo-next-body">
               <div className="wo-muscle-map-wrap">
@@ -457,6 +465,7 @@ export default function Workout({ user }: { user: User }) {
             </div>
 
             {/* CTA */}
+            <div className="wo-character">💪</div>
             <button className="btn-gold wo-start-btn"
               onClick={() => nextDay ? startWorkout(`${selectedProgram?.shortName} — ${nextDay.day.label}`) : startWorkout('אימון חופשי')}>
               ▶ התחל {nextDay ? nextDay.day.label : 'אימון'}
