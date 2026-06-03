@@ -40,7 +40,7 @@ export default function Sidebar({ active, onNavigate, userName }: Props) {
                 <div className="sidebar-section-label">{item.section}</div>
               )}
               <button
-                className={`sidebar-item ${isActive ? 'active' : ''}`}
+                className={`sidebar-item ${isActive ? 'active' : ''}`} data-page={item.id}
                 style={isActive ? { '--item-color': item.color + '22' } as React.CSSProperties : {}}
                 onClick={() => onNavigate(item.id)}
               >
