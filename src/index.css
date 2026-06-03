@@ -356,3 +356,104 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .stat-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
 .stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
 .stat-sub { font-size: 11px; color: var(--text3); }
+
+/* ══════════════════════════════════════════════════════
+   GLOBAL VISUAL UPGRADE — Infographics & Color
+   ══════════════════════════════════════════════════════ */
+
+/* ─── Sidebar module colors ──────────────────────────── */
+.sidebar-item.active[data-page="finance"]   .sidebar-icon { color: var(--m-finance) !important; }
+.sidebar-item.active[data-page="workout"]   .sidebar-icon { color: var(--m-workout) !important; }
+.sidebar-item.active[data-page="habits"]    .sidebar-icon { color: var(--m-habits) !important; }
+.sidebar-item.active[data-page="tasks"]     .sidebar-icon { color: var(--m-tasks) !important; }
+.sidebar-item.active[data-page="invest"]    .sidebar-icon { color: var(--m-invest) !important; }
+.sidebar-item.active[data-page="calendar"]  .sidebar-icon { color: var(--m-calendar) !important; }
+.sidebar-item.active[data-page="reminders"] .sidebar-icon { color: var(--m-remind) !important; }
+.sidebar-item.active[data-page="nutrition"] .sidebar-icon { color: var(--m-food) !important; }
+
+/* ─── Sidebar — colored left border on active ────────── */
+.sidebar-item.active {
+  position: relative;
+}
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  right: 0; top: 6px; bottom: 6px;
+  width: 2.5px;
+  border-radius: 2px;
+  background: var(--item-accent, var(--gold));
+}
+
+/* ─── Card inner glows on hover ──────────────────────── */
+.card { transition: border-color 0.2s, box-shadow 0.2s; }
+
+/* ─── Progress bars — gradient fill ─────────────────── */
+.progress-bar-fill {
+  background: linear-gradient(90deg, var(--fill-start, currentColor), var(--fill-end, currentColor)) !important;
+}
+
+/* ─── Gold buttons — stronger glow ──────────────────── */
+.btn-gold {
+  box-shadow: 0 2px 12px rgba(245, 200, 66, 0.25);
+}
+.btn-gold:hover {
+  box-shadow: 0 4px 20px rgba(245, 200, 66, 0.4) !important;
+}
+
+/* ─── Module titles — accent icon glow ──────────────── */
+.module-title > span:first-child {
+  filter: drop-shadow(0 0 8px currentColor);
+  display: inline-block;
+}
+
+/* ─── Badges — subtle shadows ────────────────────────── */
+.badge-green { box-shadow: 0 0 8px rgba(16,185,129,0.2); }
+.badge-red   { box-shadow: 0 0 8px rgba(244,63,94,0.2); }
+.badge-gold  { box-shadow: 0 0 8px rgba(245,200,66,0.2); }
+.badge-blue  { box-shadow: 0 0 8px rgba(59,130,246,0.2); }
+
+/* ─── Stat cards — compact infographic style ─────────── */
+.stat-card { transition: transform 0.15s, box-shadow 0.15s; }
+.stat-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.stat-value { background: linear-gradient(135deg, var(--text), var(--text2)); -webkit-background-clip: text; }
+
+/* ─── Empty states — warmer ──────────────────────────── */
+.empty-state-icon { filter: grayscale(0.3); }
+
+/* ─── AI panel — gold accent ─────────────────────────── */
+.ai-panel-avatar {
+  box-shadow: 0 0 16px rgba(245, 200, 66, 0.3);
+}
+.ai-status-dot {
+  box-shadow: 0 0 6px var(--green);
+}
+
+/* ─── Top bar theme btn — styled ────────────────────── */
+.app-theme-btn { border-radius: 20px !important; }
+.app-ai-toggle { border-radius: 20px !important; }
+
+/* ─── Form inputs — glow on focus ────────────────────── */
+.form-input:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 20%, transparent),
+              0 0 12px color-mix(in srgb, var(--gold) 10%, transparent) !important;
+}
+
+/* ─── Heatmap cells — global ─────────────────────────── */
+[class*="hm-cell"].active, [class*="heat-cell"] {
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+/* ─── Sidebar logo glow ──────────────────────────────── */
+.sidebar-logo-icon {
+  animation: goldPulse 4s ease-in-out infinite alternate;
+}
+@keyframes goldPulse {
+  from { box-shadow: 0 0 10px rgba(245,200,66,0.2); }
+  to   { box-shadow: 0 0 24px rgba(245,200,66,0.45); }
+}
+
+/* ─── Numbers — tabular, crisp ───────────────────────── */
+.dash-fin-val, .dash-stat-value, .wo-active-timer, .stat-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
