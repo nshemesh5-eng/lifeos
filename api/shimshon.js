@@ -11,11 +11,10 @@ export default async function handler(req, res) {
   const { messages = [], systemPrompt = '' } = req.body || {}
   const recent = messages.slice(-12)
 
-  // Build contents — system as first user message, then conversation
   const contents = []
   if (systemPrompt) {
     contents.push({ role: 'user', parts: [{ text: systemPrompt }] })
-    contents.push({ role: 'model', parts: [{ text: 'מובן. אני מוכן לעזור.' }] })
+    contents.push({ role: 'model', parts: [{ text: 'מובן.' }] })
   }
   for (const m of recent) {
     const role = m.role === 'model' ? 'model' : 'user'
@@ -23,53 +22,54 @@ export default async function handler(req, res) {
     if (text) contents.push({ role, parts: [{ text }] })
   }
 
-  // Try multiple models in order
-  const models = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-8b',
-  ]
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
 
   for (const model of models) {
     try {
-      // Support both old AIzaSy... and new AQ.Ab... key formats
-      const url = geminiKey.startsWith('AQ.')
+      // Google's new AQ. key format uses x-goog-api-key header
+      // Old AIzaSy format uses query param
+      const isNewFormat = geminiKey.startsWith('AQ.')
+      const url = isNewFormat
         ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
         : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
 
       const headers = { 'Content-Type': 'application/json' }
-      if (geminiKey.startsWith('AQ.')) {
-        headers['x-goog-api-key'] = geminiKey
-      }
+      if (isNewFormat) headers['x-goog-api-key'] = geminiKey
 
       const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify({
           contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+          generationConfig: { temperature: 0.75, maxOutputTokens: 600 }
         })
       })
 
       const data = await response.json()
 
-      if (response.status === 429) {
-        continue // try next model
+      if (response.status === 429) { continue }
+      if (response.status === 401 || response.status === 403) {
+        // Key doesn't work for this format — try with query param too
+        const url2 = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
+        const r2 = await fetch(url2, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents, generationConfig: { temperature: 0.75, maxOutputTokens: 600 } })
+        })
+        const d2 = await r2.json()
+        if (r2.ok) {
+          const text = d2.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+          return res.status(200).json({ text, model })
+        }
+        continue
       }
-
-      if (!response.ok) {
-        const msg = data.error?.message || 'Gemini error'
-        if (msg.includes('not found') || msg.includes('deprecated')) continue
-        return res.status(400).json({ error: msg })
-      }
+      if (!response.ok) { continue }
 
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
-      return res.status(200).json({ text, model })
+      if (text) return res.status(200).json({ text, model })
 
-    } catch (e) {
-      continue
-    }
+    } catch (e) { continue }
   }
 
-  return res.status(429).json({ error: 'כל המודלים עמוסים כרגע — נסה שוב בעוד רגע' })
+  return res.status(429).json({ error: 'שמשון עמוס — נסה שוב בעוד רגע' })
 }
