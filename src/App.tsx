@@ -45,6 +45,7 @@ export default function App() {
   const [page, setPage] = useState('dashboard')
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('shimshon-theme') as Theme) || 'dark')
   const [aiOpen, setAiOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [briefing, setBriefing] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
   const [habits, setHabits] = useState<any[]>([])
@@ -52,7 +53,11 @@ export default function App() {
   const [reminders, setReminders] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
 
-  const navigate = (p: string) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const navigate = (p: string) => {
+    setPage(p)
+    setSidebarOpen(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // Theme
   useEffect(() => {
@@ -135,12 +140,17 @@ export default function App() {
 
   return (
     <div className={`app-layout ${aiOpen ? 'ai-open' : ''}`}>
-      <Sidebar active={page} onNavigate={navigate} userName={user.email?.split('@')[0]} />
+      {/* Sidebar overlay for mobile */}
+      <div className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <Sidebar active={page} onNavigate={navigate} userName={user.email?.split('@')[0]} mobileOpen={sidebarOpen} />
       
       <main className="app-main">
         {/* Top Bar */}
         <header className="app-topbar">
           <div className="app-topbar-right">
+            <button className="app-hamburger" onClick={() => setSidebarOpen(p => !p)}>
+              ☰
+            </button>
             <div className="app-greeting">
               <span className="app-greet-text">{timeGreet}</span>
               <span className="app-greet-dot">·</span>
@@ -182,6 +192,27 @@ export default function App() {
         </div>
         <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} embedded />
       </aside>
+      {/* Mobile bottom navigation */}
+      <nav className="mobile-bottom-nav">
+        {[
+          { id: 'dashboard', icon: '⊞', label: 'ראשי' },
+          { id: 'finance',   icon: '₪',  label: 'כסף' },
+          { id: 'workout',   icon: '◈',  label: 'כושר' },
+          { id: 'habits',    icon: '◎',  label: 'הרגלים' },
+          { id: 'tasks',     icon: '☰',  label: 'משימות' },
+        ].map(item => (
+          <button key={item.id} className={`mobile-nav-btn ${page === item.id ? 'active' : ''}`}
+            onClick={() => navigate(item.id)}>
+            <span>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+        <button className={`mobile-nav-btn ${aiOpen ? 'active' : ''}`}
+          onClick={() => setAiOpen(p => !p)}>
+          <span>ש</span>
+          <span>AI</span>
+        </button>
+      </nav>
     </div>
   )
 }
