@@ -211,3 +211,181 @@
   .app-content { padding: 0 16px 40px; }
   .app-topbar { padding: 0 16px; }
 }
+
+/* ══════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Full Support
+   ══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* ── Layout: single column ───────────────────────── */
+  .app-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr auto;
+    position: relative;
+  }
+  .app-layout.ai-open {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Sidebar: hidden by default, slide-in drawer ── */
+  .sidebar {
+    position: fixed !important;
+    top: 0; right: 0; bottom: 0;
+    width: 260px !important;
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 199;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.visible { display: block; }
+
+  /* ── Top bar: mobile ─────────────────────────────── */
+  .app-topbar {
+    padding: 0 14px !important;
+    height: 52px !important;
+    grid-column: 1 !important;
+  }
+  .app-topbar-right { gap: 6px !important; }
+  .app-topbar-left { gap: 6px !important; }
+  .app-greet-date { display: none; }
+  .app-theme-label { display: none; }
+
+  /* ── Hamburger menu button ───────────────────────── */
+  .app-hamburger {
+    display: flex !important;
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--surface2); border: 0.5px solid var(--border);
+    align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; color: var(--text2);
+    flex-shrink: 0;
+  }
+
+  /* ── Content: full width ─────────────────────────── */
+  .app-main {
+    grid-column: 1 !important;
+    min-width: 0;
+  }
+  .app-content {
+    padding: 0 14px 80px !important;
+    max-width: 100% !important;
+  }
+
+  /* ── AI Panel: bottom sheet on mobile ────────────── */
+  .ai-panel {
+    position: fixed !important;
+    bottom: 0; left: 0; right: 0; top: auto !important;
+    width: 100% !important;
+    height: 70vh;
+    border-radius: 20px 20px 0 0;
+    border-right: none !important;
+    border-top: 0.5px solid var(--border2) !important;
+    z-index: 200;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.4);
+  }
+  .ai-panel.open {
+    width: 100% !important;
+    transform: translateY(0);
+  }
+  .ai-panel.closed {
+    transform: translateY(100%);
+    width: 100% !important;
+  }
+  .ai-panel-header {
+    border-radius: 20px 20px 0 0;
+  }
+  .ai-panel-header::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
+
+  /* ── Bottom nav bar ──────────────────────────────── */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--surface);
+    border-top: 0.5px solid var(--border);
+    z-index: 100;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; cursor: pointer;
+    color: var(--text3); background: none; border: none;
+    font-size: 18px; border-radius: 10px; transition: all 0.15s;
+  }
+  .mobile-nav-btn.active { color: var(--gold); }
+  .mobile-nav-btn span:last-child { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+
+  /* ── Module pages: mobile adjustments ───────────── */
+  .module-header { flex-direction: column; gap: 10px; }
+  .module-title { font-size: 20px; }
+
+  /* ── Dashboard: single column ────────────────────── */
+  .dash-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .dash-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .dash-quick { gap: 6px !important; }
+  .dash-quick-btn { min-width: 0; flex: 1 1 calc(33% - 6px); }
+  .dash-greeting { font-size: 20px; }
+
+  /* ── Finance: tabs scroll ────────────────────────── */
+  .fin-tabs-row, .fin-filters {
+    overflow-x: auto; flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fin-tabs-row::-webkit-scrollbar { display: none; }
+  .fin-kpi-strip { grid-template-columns: 1fr 1fr !important; }
+  .fin-overview { grid-template-columns: 1fr !important; }
+  .budgets-grid { grid-template-columns: 1fr !important; }
+  .goals-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Workout: stack layout ───────────────────────── */
+  .wo-hero-layout { grid-template-columns: 1fr !important; }
+  .wo-split-body { grid-template-columns: 1fr !important; }
+  .wo-split-left { border-left: none !important; border-bottom: 0.5px solid var(--border); }
+  .wo-kpi-row { justify-content: space-around; padding: 12px 8px !important; }
+  .wo-timing-row { flex-direction: column; gap: 6px !important; }
+  .wo-next-body { flex-direction: column; }
+  .wo-stats-grid { grid-template-columns: 1fr !important; }
+  .wo-split-inputs { gap: 4px !important; padding: 10px !important; }
+  .wo-input-big { height: 44px !important; font-size: 20px !important; }
+
+  /* ── Tab bars: scroll ────────────────────────────── */
+  .tab-bar {
+    overflow-x: auto; width: 100% !important;
+    scrollbar-width: none; flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+
+  /* ── Cards: reduce padding ───────────────────────── */
+  .card { border-radius: 12px !important; }
+
+  /* ── Form inputs: larger touch targets ───────────── */
+  .form-input, .btn-gold, .btn-ghost { min-height: 44px; }
+  .btn-gold, .btn-ghost { padding: 0 16px; }
+}
+
+/* ── Hamburger: hide on desktop ──────────────────────── */
+.app-hamburger { display: none; }
+.mobile-bottom-nav { display: none; }
+.sidebar-overlay { display: none; }
