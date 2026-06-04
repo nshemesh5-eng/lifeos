@@ -4,6 +4,7 @@ interface Props {
   active: string
   onNavigate: (page: string) => void
   userName?: string
+  mobileOpen?: boolean
 }
 
 const NAV = [
@@ -18,9 +19,9 @@ const NAV = [
   { id: 'reminders', icon: '◷',  label: 'תזכורות',   color: 'var(--m-remind)',   section: null },
 ]
 
-export default function Sidebar({ active, onNavigate, userName }: Props) {
+export default function Sidebar({ active, onNavigate, userName, mobileOpen }: Props) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Logo */}
       <div className="sidebar-logo" onClick={() => onNavigate('dashboard')}>
         <div className="sidebar-logo-icon">ש</div>
