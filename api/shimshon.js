@@ -2,79 +2,74 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY
   const geminiKey = process.env.VITE_GEMINI_API_KEY
+  if (!geminiKey) return res.status(500).json({ error: 'API key not configured' })
 
   const { messages = [], systemPrompt = '' } = req.body || {}
-  const recentMessages = messages.slice(-12)
+  const recent = messages.slice(-12)
 
-  // ── Try Claude first (better, smarter, higher limits) ──
-  if (anthropicKey) {
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 600,
-          system: systemPrompt || 'אתה שמשון, עוזר אישי חכם בעברית.',
-          messages: recentMessages.map(m => ({
-            role: m.role === 'model' ? 'assistant' : m.role,
-            content: m.parts?.[0]?.text || m.content || ''
-          }))
-        })
-      })
-
-      const data = await response.json()
-      if (response.ok) {
-        const text = data.content?.[0]?.text?.trim() || ''
-        return res.status(200).json({ text, provider: 'claude' })
-      }
-    } catch (e) {
-      // Fall through to Gemini
-    }
+  // Build contents — system as first user message, then conversation
+  const contents = []
+  if (systemPrompt) {
+    contents.push({ role: 'user', parts: [{ text: systemPrompt }] })
+    contents.push({ role: 'model', parts: [{ text: 'מובן. אני מוכן לעזור.' }] })
+  }
+  for (const m of recent) {
+    const role = m.role === 'model' ? 'model' : 'user'
+    const text = m.parts?.[0]?.text || m.content || ''
+    if (text) contents.push({ role, parts: [{ text }] })
   }
 
-  // ── Fallback: Gemini ────────────────────────────────────
-  if (!geminiKey) return res.status(500).json({ error: 'לא הוגדר מפתח AI' })
-
-  const contents = [
-    { role: 'user', parts: [{ text: systemPrompt || 'אתה שמשון, עוזר אישי בעברית.' }] },
-    { role: 'model', parts: [{ text: 'מוכן.' }] },
-    ...recentMessages
+  // Try multiple models in order
+  const models = [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-8b',
   ]
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
+  for (const model of models) {
+    try {
+      // Support both old AIzaSy... and new AQ.Ab... key formats
+      const url = geminiKey.startsWith('AQ.')
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
+
+      const headers = { 'Content-Type': 'application/json' }
+      if (geminiKey.startsWith('AQ.')) {
+        headers['x-goog-api-key'] = geminiKey
+      }
+
+      const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           contents,
           generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
         })
+      })
+
+      const data = await response.json()
+
+      if (response.status === 429) {
+        continue // try next model
       }
-    )
 
-    const data = await response.json()
-    if (!response.ok) {
-      const msg = data.error?.message || 'שגיאה'
-      if (response.status === 429) return res.status(429).json({ error: 'יותר מדי בקשות — המתן דקה' })
-      return res.status(response.status).json({ error: msg })
+      if (!response.ok) {
+        const msg = data.error?.message || 'Gemini error'
+        if (msg.includes('not found') || msg.includes('deprecated')) continue
+        return res.status(400).json({ error: msg })
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+      return res.status(200).json({ text, model })
+
+    } catch (e) {
+      continue
     }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
-    return res.status(200).json({ text, provider: 'gemini' })
-  } catch (e) {
-    return res.status(500).json({ error: e.message })
   }
+
+  return res.status(429).json({ error: 'כל המודלים עמוסים כרגע — נסה שוב בעוד רגע' })
 }
