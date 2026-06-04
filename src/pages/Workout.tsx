@@ -240,8 +240,11 @@ export default function Workout({ user }: { user: User }) {
   const [reps, setReps] = useState('10')
   const [weight, setWeight] = useState('')
   const [showExercisePicker, setShowExercisePicker] = useState(false)
-  const [swapTargetIdx, setSwapTargetIdx] = useState<number | null>(null)  // index in plan to swap
+  const [swapTargetIdx, setSwapTargetIdx] = useState<number | null>(null)
   const [swapSearch, setSwapSearch] = useState('')
+  const [workoutRating, setWorkoutRating] = useState(0)
+  const [difficulty, setDifficulty] = useState(2)
+  const [workoutStartTime] = useState(() => new Date())
   // Timer
   const [timer, setTimer] = useState(0)
   const [restTimer, setRestTimer] = useState(0)
@@ -376,7 +379,12 @@ export default function Workout({ user }: { user: User }) {
 
   const finish = async () => {
     if (!activeWorkout) return
-    await supabase.from('workouts').update({duration_min:Math.round(timer/60)}).eq('id',activeWorkout.id)
+    await supabase.from('workouts').update({
+      duration_min: Math.round(timer/60),
+      rating: workoutRating || null,
+      difficulty: difficulty || null,
+      start_time: format(workoutStartTime, 'HH:mm'),
+    }).eq('id', activeWorkout.id)
     setActiveWorkout(null); setActiveSets([]); setTimer(0); setRestActive(false)
     loadWorkouts(); setTab('hero')
   }
@@ -635,92 +643,198 @@ export default function Workout({ user }: { user: User }) {
               )}
             </div>
           ) : (
-            // Active workout
-            <div className="wo-active card fade-in">
-              <div className="wo-active-header">
-                <div>
-                  <div className="wo-active-type">{activeWorkout.type}</div>
-                  <div className="wo-active-timer">{fmt(timer)}</div>
+            // Active workout — split screen
+            <div className="wo-split-screen fade-in">
+
+              {/* ── TOP BAR ──────────────────────────────── */}
+              <div className="wo-split-topbar">
+                <div className="wo-split-info">
+                  <div className="wo-split-type">{activeWorkout.type.split('—').pop()?.trim()}</div>
+                  <div className="wo-split-meta">
+                    <span className="wo-split-timer-badge">⏱ {fmt(timer)}</span>
+                    <span className="wo-split-start">התחיל {format(new Date(),'HH:mm')}</span>
+                    <span className="wo-split-done-count">{activeSets.length} סטים הושלמו</span>
+                  </div>
                 </div>
-                {restActive && (
+                {restActive ? (
                   <div className="wo-rest-box">
                     <div className="wo-rest-label">מנוחה</div>
                     <div className="wo-rest-count">{fmt(restTimer)}</div>
-                    <button className="wo-rest-skip" onClick={()=>setRestActive(false)}>דלג</button>
+                    <button className="wo-rest-skip" onClick={()=>setRestActive(false)}>דלג ›</button>
+                  </div>
+                ) : (
+                  <div className="wo-split-rating">
+                    <div className="wo-split-rating-label">איך האימון?</div>
+                    <div className="wo-split-stars">
+                      {[1,2,3,4,5].map(n=>(
+                        <button key={n} className={`wo-star ${workoutRating>=n?'active':''}`}
+                          onClick={()=>setWorkoutRating(n)}>★</button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Plan exercises checklist */}
-              {currentPlanDay && (
-                <div className="wo-plan-checklist">
-                  <div className="wo-section-title" style={{marginBottom:8}}>תרגילי האימון</div>
-                  {currentPlanDay.exercises.map((ex,i)=>{
-                    const done = activeSets.some(s=>s.exercise===ex.name)
+              {/* ── SPLIT BODY ───────────────────────────── */}
+              <div className="wo-split-body">
+
+                {/* LEFT — Exercise list */}
+                <div className="wo-split-left">
+                  <div className="wo-split-col-title">
+                    <span>📋 תרגילי האימון</span>
+                    <span className="wo-split-progress-text">
+                      {currentPlanDay
+                        ? `${activeSets.filter((s,_,arr)=>currentPlanDay.exercises.some(e=>e.name===s.exercise)).length > 0 ? '...' : '0'}/${currentPlanDay.exercises.length}`
+                        : activeSets.length + ' סטים'}
+                    </span>
+                  </div>
+
+                  {currentPlanDay ? currentPlanDay.exercises.map((ex,i)=>{
+                    const exSets = activeSets.filter(s=>s.exercise===ex.name)
+                    const done = exSets.length >= ex.sets
+                    const partial = exSets.length > 0 && !done
+                    const isSelected = exercise === ex.name
                     return (
-                      <div key={i} className={`wo-plan-ex-row ${done?'done':''}`}>
-                        <div className="wo-plan-check">{done?'✓':i+1}</div>
-                        <div className="wo-plan-ex-info">
-                          <span className="wo-plan-ex-name">{ex.name}</span>
-                          <span className="wo-plan-ex-meta">{ex.sets}×{ex.reps} · {ex.rest}″</span>
+                      <div key={i}
+                        className={`wo-ex-item ${done?'done':''} ${partial?'partial':''} ${isSelected?'selected':''}`}
+                        onClick={()=>{ setExercise(ex.name); setNumSets(String(ex.sets)); setReps(String(ex.reps).split('-')[0]) }}>
+                        {/* Status indicator */}
+                        <div className={`wo-ex-status ${done?'done':partial?'partial':'pending'}`}>
+                          {done ? '✓' : partial ? exSets.length : i+1}
                         </div>
-                        <div style={{display:'flex',gap:4}}>
-                          {!done && (
-                            <button className="btn-surface" style={{fontSize:11,height:28,padding:'0 8px'}}
-                              onClick={()=>{ setExercise(ex.name); setNumSets(String(ex.sets)); setReps(ex.reps.split('-')[0]); }}>
-                              בחר
-                            </button>
+                        <div className="wo-ex-body">
+                          <div className="wo-ex-name">{ex.name}</div>
+                          <div className="wo-ex-targets">
+                            <span className="wo-ex-chip">{ex.sets} סטים</span>
+                            <span className="wo-ex-chip">{ex.reps} חזרות</span>
+                            <span className="wo-ex-chip">⏱ {ex.rest}″</span>
+                            {exSets.length > 0 && (
+                              <span className="wo-ex-chip done-chip">
+                                {exSets[exSets.length-1].weight_kg > 0 ? `${exSets[exSets.length-1].weight_kg}kg` : 'BW'}
+                              </span>
+                            )}
+                          </div>
+                          {/* Progress bar within exercise */}
+                          {ex.sets > 1 && (
+                            <div className="wo-ex-progress">
+                              {Array.from({length:ex.sets},(_,si)=>(
+                                <div key={si} className={`wo-ex-prog-dot ${si<exSets.length?'done':''}`}/>
+                              ))}
+                            </div>
                           )}
-                          <button className="btn-icon" style={{width:28,height:28,fontSize:11}}
-                            title="החלף תרגיל"
-                            onClick={()=>{
-                              setSwapTarget({idx:i, name:ex.name})
-                              setShowSwapPicker(true)
-                              loadExerciseDB()
-                            }}>⇄</button>
                         </div>
+                        <button className="wo-ex-swap" title="החלף תרגיל"
+                          onClick={e=>{e.stopPropagation();setSwapTarget({idx:i,name:ex.name});setShowSwapPicker(true);loadExerciseDB()}}>
+                          ⇄
+                        </button>
                       </div>
                     )
-                  })}
-                </div>
-              )}
-
-              {/* Sets log */}
-              {activeSets.length>0 && (
-                <div className="wo-sets-log">
-                  {activeSets.map((s,i)=>(
-                    <div key={s.id} className="wo-set-row">
-                      <span className="wo-set-num">{i+1}</span>
-                      <span className="wo-set-ex">{s.exercise}</span>
-                      <span className="wo-set-info">{s.sets}×{s.reps}</span>
-                      <span className="wo-set-wt">{s.weight_kg>0?`${s.weight_kg}kg`:'BW'}</span>
-                      {s.weight_kg>0&&<span className="wo-set-1rm">1RM≈{calc1RM(s.weight_kg,s.reps)}kg</span>}
+                  }) : (
+                    <div className="empty-state" style={{padding:'20px 0'}}>
+                      <p style={{fontSize:13}}>אימון חופשי — הוסף תרגילים ימינה</p>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Add set form */}
-              <div className="wo-add-form">
-                <div style={{display:'flex',gap:8}}>
-                  <input className="form-input" style={{flex:1}} value={exercise}
-                    onChange={e=>setExercise(e.target.value)} placeholder="שם תרגיל..." />
-                  <button className="btn-ghost" onClick={()=>{loadExerciseDB();setShowExercisePicker(true)}}>🔍</button>
-                </div>
-                <div className="wo-form-row">
-                  <div className="mfield"><label>סטים</label>
-                    <input className="form-input" type="number" value={numSets} onChange={e=>setNumSets(e.target.value)} min="1"/></div>
-                  <div className="mfield"><label>חזרות</label>
-                    <input className="form-input" type="number" value={reps} onChange={e=>setReps(e.target.value)} min="1"/></div>
-                  <div className="mfield"><label>ק"ג</label>
-                    <input className="form-input" type="number" value={weight} onChange={e=>setWeight(e.target.value)} placeholder="0" step="0.5"/></div>
-                  {weight&&reps&&(
-                    <div className="mfield"><label>1RM</label>
-                      <div className="form-input" style={{color:'var(--amber)',fontWeight:700,cursor:'default',display:'flex',alignItems:'center'}}>
-                        {calc1RM(parseFloat(weight)||0,parseInt(reps)||1)}kg
-                      </div></div>
                   )}
-                  <button className="btn-gold" onClick={()=>addSet()} disabled={!exercise} style={{alignSelf:'flex-end',height:40}}>+ הוסף</button>
+
+                  {/* Free exercises not in plan */}
+                  {activeSets.filter(s=>!currentPlanDay?.exercises.some(e=>e.name===s.exercise)).length > 0 && (
+                    <div style={{marginTop:8,paddingTop:8,borderTop:'0.5px solid var(--border)'}}>
+                      <div className="wo-split-col-title" style={{marginBottom:6}}>תוספות</div>
+                      {[...new Set(activeSets.filter(s=>!currentPlanDay?.exercises.some(e=>e.name===s.exercise)).map(s=>s.exercise))].map(exName=>(
+                        <div key={exName} className="wo-ex-item partial" onClick={()=>setExercise(exName)}>
+                          <div className="wo-ex-status partial">+</div>
+                          <div className="wo-ex-body">
+                            <div className="wo-ex-name">{exName}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT — Log set */}
+                <div className="wo-split-right">
+                  <div className="wo-split-col-title">
+                    <span>✏️ {exercise || 'בחר תרגיל'}</span>
+                    {exercise && <button className="btn-icon" style={{width:24,height:24,fontSize:11}} onClick={()=>{loadExerciseDB();setShowExercisePicker(true)}}>🔍</button>}
+                  </div>
+
+                  {/* Inputs */}
+                  <div className="wo-split-inputs">
+                    <div className="wo-input-block">
+                      <div className="wo-input-label">סטים</div>
+                      <input className="wo-input-big" type="number" value={numSets}
+                        onChange={e=>setNumSets(e.target.value)} min="1" max="10"/>
+                    </div>
+                    <div className="wo-input-sep">×</div>
+                    <div className="wo-input-block">
+                      <div className="wo-input-label">חזרות</div>
+                      <input className="wo-input-big" type="number" value={reps}
+                        onChange={e=>setReps(e.target.value)} min="1" max="100"/>
+                    </div>
+                    <div className="wo-input-sep">@</div>
+                    <div className="wo-input-block">
+                      <div className="wo-input-label">קילוגרם</div>
+                      <input className="wo-input-big" type="number" value={weight}
+                        onChange={e=>setWeight(e.target.value)} placeholder="0" step="2.5"/>
+                    </div>
+                  </div>
+
+                  {/* 1RM estimator */}
+                  {weight && reps && (
+                    <div className="wo-1rm-card">
+                      <div className="wo-1rm-label">מקסימום משוער (1RM)</div>
+                      <div className="wo-1rm-val">{calc1RM(parseFloat(weight)||0, parseInt(reps)||1)} <span>ק"ג</span></div>
+                      <div className="wo-1rm-pct">
+                        {[100,95,90,85,80,75,70].map(p=>(
+                          <div key={p} className="wo-pct-row">
+                            <span className="wo-pct-label">{p}%</span>
+                            <span className="wo-pct-val">{Math.round(calc1RM(parseFloat(weight)||0,parseInt(reps)||1)*p/100)}kg</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Difficulty */}
+                  <div className="wo-difficulty">
+                    <div className="wo-split-col-title" style={{marginBottom:8}}>דרגת קושי</div>
+                    <div className="wo-diff-row">
+                      {[
+                        {val:1, label:'קל', color:'#10B981', emoji:'😌'},
+                        {val:2, label:'בינוני', color:'#F59E0B', emoji:'😤'},
+                        {val:3, label:'קשה', color:'#F97316', emoji:'🥵'},
+                        {val:4, label:'מקסימום', color:'#F43F5E', emoji:'💀'},
+                      ].map(d=>(
+                        <button key={d.val}
+                          className={`wo-diff-btn ${difficulty===d.val?'active':''}`}
+                          style={difficulty===d.val?{borderColor:d.color,background:d.color+'18',color:d.color}:{}}
+                          onClick={()=>setDifficulty(d.val)}>
+                          <span>{d.emoji}</span>
+                          <span>{d.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Add button */}
+                  <button className="btn-gold wo-split-add" onClick={()=>addSet()} disabled={!exercise}>
+                    + רשום סט
+                  </button>
+
+                  {/* Sets done for this exercise */}
+                  {activeSets.filter(s=>s.exercise===exercise).length > 0 && (
+                    <div className="wo-done-sets">
+                      <div className="wo-split-col-title" style={{marginBottom:6}}>סטים שנרשמו</div>
+                      {activeSets.filter(s=>s.exercise===exercise).map((s,i)=>(
+                        <div key={s.id} className="wo-done-row">
+                          <span className="wo-done-num">סט {i+1}</span>
+                          <span className="wo-done-reps">{s.sets}×{s.reps}</span>
+                          <span className="wo-done-kg">{s.weight_kg > 0 ? `${s.weight_kg}kg` : 'BW'}</span>
+                          {s.weight_kg > 0 && <span className="wo-done-1rm">1RM≈{calc1RM(s.weight_kg,s.reps)}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
