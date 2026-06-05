@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { format, subDays, parseISO } from 'date-fns'
 import { he } from 'date-fns/locale'
 import './Nutrition.css'
+import FoodSearch from '../components/FoodSearch'
+import type { OFFProduct } from '../components/FoodSearch'
 
 // ── Types ─────────────────────────────────────────────────────
 interface FoodLog {
@@ -12,7 +14,7 @@ interface FoodLog {
 }
 interface ShoppingItem { id: string; name: string; quantity: string; category: string; checked: boolean }
 interface MealPlan { id: string; day: string; meal: string; food: string; calories: number; protein: number; carbs: number; fat: number }
-interface OFFProduct { name: string; calories: number; protein: number; carbs: number; fat: number; barcode: string; image?: string }
+// OFFProduct now imported from FoodSearch component
 
 // ── Constants ─────────────────────────────────────────────────
 const MEALS = ['ארוחת בוקר','ארוחת צהריים','ארוחת ערב','חטיף']
@@ -119,13 +121,23 @@ async function lookupBarcode(code: string): Promise<OFFProduct | null> {
     if (data.status !== 1) return null
     const p = data.product
     return {
+      id: code,
       name: p.product_name_he || p.product_name || p.product_name_en || '',
+      brand: p.brands || '',
+      thumb: p.image_small_url || p.image_url || '',
+      image: p.image_url || p.image_small_url || '',
       calories: Math.round(p.nutriments?.['energy-kcal_100g'] || p.nutriments?.['energy-kcal'] || 0),
       protein: Math.round((p.nutriments?.proteins_100g || 0) * 10) / 10,
       carbs: Math.round((p.nutriments?.carbohydrates_100g || 0) * 10) / 10,
       fat: Math.round((p.nutriments?.fat_100g || 0) * 10) / 10,
+      fiber: 0, sugar: 0, salt: 0, saturated_fat: 0,
       barcode: code,
-      image: p.image_small_url,
+      nutriScore: (p.nutriscore_grade || '').toUpperCase(),
+      novaGroup: p.nova_group || 0,
+      quantity: p.quantity || '',
+      ingredients: p.ingredients_text || '',
+      labels: [],
+      countries: '',
     }
   } catch { return null }
 }
@@ -150,6 +162,8 @@ export default function Nutrition({ user }: { user: User }) {
   const [preferences, setPreferences] = useState('')
   const [showPrefs, setShowPrefs] = useState(false)
   const [showAddMeal, setShowAddMeal] = useState(false)
+  const [showFoodSearch, setShowFoodSearch] = useState(false)
+  const [foodSearchMeal, setFoodSearchMeal] = useState('ארוחת בוקר')
   const [showAddItem, setShowAddItem] = useState(false)
   const [addMealType, setAddMealType] = useState('ארוחת בוקר')
   const [foodSearch, setFoodSearch] = useState('')
@@ -291,7 +305,7 @@ export default function Nutrition({ user }: { user: User }) {
     const product = await lookupBarcode(code)
     if (product) {
       setScanResult(product)
-      setSelectedFood({ name: product.name, cal: product.calories, p: product.protein, c: product.carbs, f: product.fat })
+      setSelectedFood({ ...product, name: product.name } as any)
       setFoodSearch(product.name)
     } else {
       setCameraError(`ברקוד ${code} לא נמצא במאגר. נסה מוצר אחר.`)
@@ -351,6 +365,20 @@ export default function Nutrition({ user }: { user: User }) {
     setGenerating(false)
   }
 
+  const handleFoodAdd = async (product: OFFProduct, amount: number, meal: string) => {
+    const ratio = amount / 100
+    const entry = {
+      user_id: user.id, date: selectedDate, meal, food: product.name,
+      calories: Math.round(product.calories * ratio),
+      protein: Math.round(product.protein * ratio * 10) / 10,
+      carbs: Math.round(product.carbs * ratio * 10) / 10,
+      fat: Math.round(product.fat * ratio * 10) / 10,
+      amount_g: amount,
+    }
+    const { data } = await supabase.from('food_logs').insert(entry).select().single()
+    if (data) setLogs(p => [data, ...p])
+  }
+
   const last7 = Array.from({length:7}, (_,i) => {
     const d = format(subDays(now, 6-i), 'yyyy-MM-dd')
     const dl = logs.filter(l => l.date === d)
@@ -377,7 +405,7 @@ export default function Nutrition({ user }: { user: User }) {
         <div style={{display:'flex',gap:8}}>
           <button className="btn-ghost" onClick={()=>setShowPrefs(true)}>⚙️</button>
           <button className="btn-ghost" onClick={()=>{setShowScanner(true); setTimeout(startCamera, 300)}}>📷 ברקוד</button>
-          <button className="btn-gold" onClick={()=>setShowAddMeal(true)}>+ ארוחה</button>
+          <button className="btn-gold" onClick={()=>{ setFoodSearchMeal('ארוחת בוקר'); setShowFoodSearch(true) }}>+ ארוחה</button>
         </div>
       </div>
 
@@ -481,12 +509,12 @@ export default function Nutrition({ user }: { user: User }) {
                     <button className="nutr-del" onClick={()=>deleteLog(l.id)}>✕</button>
                   </div>
                 )) : (
-                  <div className="nutr-meal-empty" onClick={()=>{setAddMealType(meal);setShowAddMeal(true)}}>לחץ + להוסיף</div>
+                  <div className="nutr-meal-empty" onClick={()=>{setFoodSearchMeal(meal);setShowFoodSearch(true)}}>לחץ + להוסיף</div>
                 )}
               </div>
             )
           })}
-          <button className="btn-ghost" style={{width:'100%',marginTop:4}} onClick={()=>setShowAddMeal(true)}>+ הוסף מזון</button>
+          <button className="btn-ghost" style={{width:'100%',marginTop:4}} onClick={()=>setShowFoodSearch(true)}>🔍 חפש מוצר (Open Food Facts)</button>
         </div>
       )}
 
@@ -842,6 +870,14 @@ export default function Nutrition({ user }: { user: User }) {
             </div>
           </div>
         </div>
+      )}
+      {/* FoodSearch modal */}
+      {showFoodSearch && (
+        <FoodSearch
+          initialMeal={foodSearchMeal}
+          onAdd={handleFoodAdd}
+          onClose={() => setShowFoodSearch(false)}
+        />
       )}
     </div>
   )
