@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
+import { autoRefreshToken } from './lib/googleCalendar'
 import { LifeContext, getDailyBriefing } from './lib/shimshon'
 import { format } from 'date-fns'
 import { he } from 'date-fns/locale'
@@ -60,6 +61,9 @@ export default function App() {
   }
 
   // Theme
+  // Auto-refresh Google Calendar
+  useEffect(() => { autoRefreshToken() }, [])
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('shimshon-theme', theme)
