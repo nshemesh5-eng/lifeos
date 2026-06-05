@@ -85,7 +85,8 @@ export function requestToken(): Promise<string> {
       // If we have a valid token, no popup needed
       const existing = getToken()
       if (existing) { resolve(existing); return }
-      client.requestAccessToken({ prompt: '' }) // no prompt if already authed
+      // Try silent refresh first (no popup)
+      client.requestAccessToken({ prompt: '' })  // '' = silent if already authed by browser
     } catch (e) {
       reject(e)
     }
@@ -223,4 +224,31 @@ export function toGCalEvent(e: {
       overrides: e.reminder_minutes > 0 ? [{ method: 'popup', minutes: e.reminder_minutes }] : [],
     } : { useDefault: true },
   }
+}
+
+// ── Auto-refresh: call on app load, keeps calendar connected ─
+export async function autoRefreshToken(): Promise<boolean> {
+  try {
+    const expiry = Number(localStorage.getItem('gcal_token_expiry') || 0)
+    const token = localStorage.getItem('gcal_access_token')
+    if (!token) return false
+
+    // Token still valid for >5min? Keep it
+    if (expiry - Date.now() > 5 * 60 * 1000) {
+      _accessToken = token
+      _tokenExpiry = expiry
+      return true
+    }
+
+    // Try silent refresh (no popup, uses existing Google session)
+    const client = await initTokenClient()
+    return new Promise(resolve => {
+      client.callback = (resp: any) => {
+        if (resp.error || !resp.access_token) { resolve(false); return }
+        saveToken(resp.access_token, resp.expires_in || 3600)
+        resolve(true)
+      }
+      client.requestAccessToken({ prompt: '' })
+    })
+  } catch { return false }
 }
