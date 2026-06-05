@@ -56,13 +56,14 @@ const BRIEFING_TTL = 15 * 60 * 1000
 
 async function callAPI(
   messages: Array<{role: string, parts: Array<{text: string}>}>,
-  systemPrompt: string
+  systemPrompt: string,
+  context?: any
 ): Promise<string> {
   try {
     const res = await fetch('/api/shimshon', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, systemPrompt })
+      body: JSON.stringify({ messages, systemPrompt, context })
     })
 
     if (!res.ok) {
@@ -83,12 +84,12 @@ export async function askShimshon(
   messages: ShimshonMessage[],
   context: LifeContext
 ): Promise<string> {
-  const ctx = buildContextString(context)
   const geminiMessages = messages.map(m => ({
     role: m.role === 'user' ? 'user' : 'model',
     parts: [{ text: m.content }]
   }))
-  return callAPI(geminiMessages, SYSTEM + '\n\n' + ctx)
+  // Send both system prompt and context to server — Claude will use full context
+  return callAPI(geminiMessages, SYSTEM, context as any)
 }
 
 export async function getDailyBriefing(context: LifeContext): Promise<string> {
