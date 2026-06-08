@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
+import ProfilePage from './pages/Profile'
+import AdminPage from './pages/Admin'
 import { autoRefreshToken } from './lib/googleCalendar'
 import { LifeContext, getDailyBriefing } from './lib/shimshon'
 import { format } from 'date-fns'
