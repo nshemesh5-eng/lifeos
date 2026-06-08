@@ -1,50 +1,67 @@
-// WhatsApp Bot via Twilio — receives messages and responds with Shimshon AI
+// WhatsApp Bot — Shimshon מהנייד
 export default async function handler(req, res) {
-  // Twilio sends POST with form data
-  if (req.method === 'GET') {
-    // Health check
-    return res.status(200).send('Shimshon WhatsApp Bot OK')
-  }
+  if (req.method === 'GET') return res.status(200).send('🤖 Shimshon WhatsApp Bot — Active')
   if (req.method !== 'POST') return res.status(405).end()
 
-  const twilioToken = process.env.TWILIO_AUTH_TOKEN
-  const accountSid  = process.env.TWILIO_ACCOUNT_SID
-  const fromNumber  = process.env.TWILIO_WHATSAPP_FROM // whatsapp:+14155238886
+  // Twilio webhook validation
+  const twilioSig = req.headers['x-twilio-signature']
+  const accountSid = process.env.TWILIO_ACCOUNT_SID
+  const authToken  = process.env.TWILIO_AUTH_TOKEN
+  const fromNumber = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886'
 
   const body = req.body || {}
-  const userMessage = body.Body || ''
-  const from = body.From || '' // whatsapp:+972XXXXXXXXX
+  const userMsg  = (body.Body || '').trim()
+  const fromNum  = body.From || ''
 
-  if (!userMessage) return res.status(200).end()
+  if (!userMsg) return res.status(200).end()
 
-  console.log(`WhatsApp from ${from}: ${userMessage}`)
-
-  // Call Shimshon AI
-  let reply = ''
+  // Find user by WhatsApp number
+  let userName = 'שמשון'
+  let userContext = null
+  
   try {
-    const shimshonRes = await fetch(`${process.env.VERCEL_URL || 'https://lifeos-eight-inky.vercel.app'}/api/shimshon`, {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'https://lifeos-eight-inky.vercel.app'
+    
+    // Call Shimshon
+    const aiRes = await fetch(`${baseUrl}/api/shimshon`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        messages: [{ role: 'user', parts: [{ text: userMessage }] }],
-        systemPrompt: `אתה שמשון — עוזר חיים אישי חכם בוואטסאפ. 
-ענה קצר וישיר בעברית. 
-אם מדברים על אוכל — ציין קלוריות וחלבון. 
-אם מדברים על כסף — ציין מספרים. 
-אם מדברים על אימון — ציין פרטים. 
-הודעה ב-WhatsApp — חד משמעי, אין markdown, אין כוכביות.`
+        source: 'whatsapp',
+        messages: [{ role:'user', parts:[{ text: userMsg }] }],
+        systemPrompt: `אתה שמשון — עוזר חיים אישי בוואטסאפ. 
+ענה קצר בעברית (1-2 משפטים). 
+ללא markdown, ללא כוכביות.
+אם שואלים על אוכל — ציין קלוריות וחלבון.
+אם שואלים על כסף — ציין מספרים.
+אם שואלים על לוח זמנים — תן תוכנית ספציפית.`,
+        context: userContext,
       })
     })
-    const data = await shimshonRes.json()
-    reply = data.text || 'שמשון לא זמין כרגע'
-  } catch {
-    reply = 'שגיאה בשמשון — נסה שוב'
-  }
+    const aiData = await aiRes.json()
+    const reply = aiData.text || 'שמשון עמוס כרגע 🔄'
 
-  // Respond via Twilio TwiML
-  res.setHeader('Content-Type', 'text/xml')
-  return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Message><Body>${reply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Body></Message>
-</Response>`)
+    // Send WhatsApp reply via Twilio
+    if (accountSid && authToken) {
+      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ From: fromNumber, To: fromNum, Body: reply })
+      })
+    }
+
+    // TwiML response
+    res.setHeader('Content-Type', 'text/xml')
+    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message><Body>${
+      reply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    }</Body></Message></Response>`)
+  } catch(e) {
+    res.setHeader('Content-Type', 'text/xml')
+    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message><Body>שגיאה — נסה שוב</Body></Message></Response>`)
+  }
 }
