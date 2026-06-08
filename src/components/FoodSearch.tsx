@@ -40,70 +40,38 @@ const NOVA_COLOR: Record<number, string> = {
 async function searchProducts(query: string, page = 1): Promise<{ products: OFFProduct[]; count: number }> {
   try {
     const res = await fetch(
-      `https://world.openfoodfacts.org/cgi/search.pl?` +
-      `search_terms=${encodeURIComponent(query)}&search_simple=1&action=process` +
-      `&json=1&page=${page}&page_size=24&sort_by=unique_scans_n` +
-      `&fields=code,product_name,product_name_he,brands,image_url,image_thumb_url,` +
-      `nutriments,nutriscore_grade,nova_group,quantity,ingredients_text,labels_tags,countries_tags`,
-      { signal: AbortSignal.timeout(8000) }
+      `/api/food-search?q=${encodeURIComponent(query)}&page=${page}`,
+      { signal: AbortSignal.timeout(12000) }
     )
     if (!res.ok) return { products: [], count: 0 }
     const data = await res.json()
     return {
-      count: data.count || 0,
-      products: (data.products || []).map(mapProduct).filter((p: OFFProduct) => p.name && p.calories > 0)
+      count: data.count || data.products?.length || 0,
+      products: (data.products || []) as OFFProduct[]
     }
   } catch { return { products: [], count: 0 } }
 }
 
 async function getProduct(barcode: string): Promise<OFFProduct | null> {
   try {
-    const res = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${barcode}` +
-      `?fields=code,product_name,product_name_he,brands,image_url,image_thumb_url,` +
-      `nutriments,nutriscore_grade,nova_group,quantity,ingredients_text,labels_tags`,
-      { signal: AbortSignal.timeout(6000) }
-    )
+    const res = await fetch(`/api/food-search?barcode=${barcode}`, { signal: AbortSignal.timeout(8000) })
+    if (!res.ok) return null
     const data = await res.json()
-    if (data.status !== 1) return null
-    return mapProduct(data.product)
+    return data.product as OFFProduct || null
   } catch { return null }
 }
 
-function mapProduct(p: any): OFFProduct {
-  const n = p.nutriments || {}
-  return {
-    id: p.code || '',
-    name: p.product_name_he || p.product_name || '',
-    brand: p.brands?.split(',')[0]?.trim() || '',
-    image: p.image_url || '',
-    thumb: p.image_thumb_url || p.image_url || '',
-    calories: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
-    protein: Math.round((n.proteins_100g || 0) * 10) / 10,
-    carbs: Math.round((n.carbohydrates_100g || 0) * 10) / 10,
-    fat: Math.round((n.fat_100g || 0) * 10) / 10,
-    fiber: Math.round((n.fiber_100g || 0) * 10) / 10,
-    sugar: Math.round((n.sugars_100g || 0) * 10) / 10,
-    salt: Math.round((n.salt_100g || 0) * 100) / 100,
-    saturated_fat: Math.round((n['saturated-fat_100g'] || 0) * 10) / 10,
-    barcode: p.code || '',
-    nutriScore: (p.nutriscore_grade || '').toUpperCase(),
-    novaGroup: p.nova_group || 0,
-    quantity: p.quantity || '',
-    ingredients: p.ingredients_text || '',
-    labels: (p.labels_tags || []).map((l: string) => l.replace('en:','').replace('he:','')),
-    countries: (p.countries_tags || []).join(', '),
-  }
-}
+// mapProduct now done server-side in /api/food-search.js
 
 async function getAIRecommendation(product: OFFProduct): Promise<string> {
   try {
-    const prompt = `מוצר: ${product.name} (${product.brand || 'ללא מותג'})
-קלוריות: ${product.calories} ל-100g | חלבון: ${product.protein}g | פחמימות: ${product.carbs}g | שומן: ${product.fat}g | סיבים: ${product.fiber}g | סוכר: ${product.sugar}g
-Nutri-Score: ${product.nutriScore || 'לא ידוע'} | NOVA: ${product.novaGroup || 'לא ידוע'} (${NOVA_LABEL[product.novaGroup] || ''})
-${product.ingredients ? 'רכיבים: ' + product.ingredients.substring(0, 200) : ''}
+    const ns = product.nutriScore ? `Nutri-Score ${product.nutriScore}` : ''
+    const nova = product.novaGroup ? `NOVA ${product.novaGroup} (${NOVA_LABEL[product.novaGroup] || ''})` : ''
+    const prompt = `מוצר: ${product.name}${product.brand ? ' — ' + product.brand : ''}.
+תזונה ל-100g: ${product.calories} קל׳ | חלבון ${product.protein}g | פחמימות ${product.carbs}g | שומן ${product.fat}g | סוכר ${product.sugar}g | סיבים ${product.fiber}g.
+${ns}${ns && nova ? ' | ' : ''}${nova}${product.ingredients ? '. רכיבים: ' + product.ingredients.substring(0,150) : ''}
 
-כתוב הערכה תזונתית קצרה בעברית — 2-3 משפטים. ציין: האם המוצר בריא, מה היתרונות והחסרונות העיקריים, ומתי כדאי לצרוך אותו. היה ספציפי ועם מספרים.`
+תן הערכה תזונתית קצרה בעברית (2-3 משפטים): האם בריא, מתי כדאי לצרוך, ומה לשים לב. ספציפי, עם מספרים.`
 
     const res = await fetch('/api/shimshon', {
       method: 'POST',
