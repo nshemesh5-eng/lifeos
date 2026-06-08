@@ -17,6 +17,8 @@ const NAV = [
   { id: 'tasks',     icon: '☰',  label: 'משימות',    color: 'var(--m-tasks)',    section: null },
   { id: 'habits',    icon: '◎',  label: 'הרגלים',    color: 'var(--m-habits)',   section: null },
   { id: 'reminders', icon: '◷',  label: 'תזכורות',   color: 'var(--m-remind)',   section: null },
+  { id: 'profile',   icon: '👤', label: 'הפרופיל שלי', color: 'var(--blue)',      section: 'חשבון' },
+  { id: 'admin',     icon: '👑', label: 'ניהול',        color: 'var(--gold)',      section: null },
 ]
 
 export default function Sidebar({ active, onNavigate, userName, mobileOpen }: Props) {
