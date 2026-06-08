@@ -127,7 +127,9 @@ export default function App() {
 
   const renderPage = () => {
     switch (page) {
-      case 'dashboard':  return <Dashboard context={context} onNavigate={navigate} user={user} />
+      case 'profile':   return <ProfilePage user={user} />
+        case 'admin':     return <AdminPage user={user} />
+        case 'dashboard':  return <Dashboard context={context} onNavigate={navigate} user={user} />
       case 'finance':    return <Finance user={user} />
       case 'workout':    return <Workout user={user} />
       case 'tasks':      return <Tasks user={user} />
