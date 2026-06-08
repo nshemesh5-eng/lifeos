@@ -1,0 +1,11 @@
+.admin-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.admin-table { overflow-x:auto; padding:0; }
+.admin-tbl { width:100%; border-collapse:collapse; }
+.admin-tbl th { padding:10px 14px; font-size:11px; font-weight:700; color:var(--text3); text-align:right; letter-spacing:0.05em; border-bottom:0.5px solid var(--border); background:var(--surface2); }
+.admin-tbl td { padding:10px 14px; border-bottom:0.5px solid var(--border); vertical-align:middle; }
+.admin-tbl tr:last-child td { border-bottom:none; }
+.admin-tbl tr:hover td { background:var(--surface2); }
+.admin-select { background:var(--surface2); border:0.5px solid var(--border); border-radius:6px; padding:4px 8px; font-size:12px; color:var(--text); cursor:pointer; }
+.admin-toggle { width:28px; height:20px; border-radius:10px; border:none; cursor:pointer; font-size:11px; font-weight:700; }
+.admin-toggle.on { background:var(--green-dim); color:var(--green); }
+.admin-toggle.off { background:var(--red-dim); color:var(--red); }
