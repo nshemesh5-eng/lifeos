@@ -20,9 +20,14 @@ export default function AdminPage({ user }: { user: User }) {
 
   useEffect(() => { init() }, [])
 
+  const ADMIN_EMAILS = ['n.shemesh5@gmail.com', 'netanel.shemes@gmail.com']
+
   const init = async () => {
-    const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (me?.role !== 'admin') { setIsAdmin(false); setLoading(false); return }
+    // Check by email directly (matches RLS policy using auth.jwt() ->> 'email')
+    const userEmail = user.email || ''
+    if (!ADMIN_EMAILS.includes(userEmail)) {
+      setIsAdmin(false); setLoading(false); return
+    }
     setIsAdmin(true)
     await Promise.all([loadUsers(), loadAudit()])
     setLoading(false)
