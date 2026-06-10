@@ -49,14 +49,13 @@ export default async function handler(req, res) {
       { role: 'model', parts: [{ text: 'מוכן.' }] },
       ...recent
     ]
-    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
+    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-exp', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro']
     
     for (const model of models) {
       // Try both auth methods
       for (const method of ['param', 'header']) {
         try {
-          // 1.5 models need v1 endpoint, 2.0 needs v1beta
-          const apiVersion = model.startsWith('gemini-2') ? 'v1beta' : 'v1'
+          const apiVersion = 'v1beta' // all models work with v1beta
           const url = method === 'param'
             ? `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${geminiKey}`
             : `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent`
