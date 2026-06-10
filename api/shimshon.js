@@ -49,15 +49,17 @@ export default async function handler(req, res) {
       { role: 'model', parts: [{ text: 'מוכן.' }] },
       ...recent
     ]
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
+    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
     
     for (const model of models) {
       // Try both auth methods
       for (const method of ['param', 'header']) {
         try {
+          // 1.5 models need v1 endpoint, 2.0 needs v1beta
+          const apiVersion = model.startsWith('gemini-2') ? 'v1beta' : 'v1'
           const url = method === 'param'
-            ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
-            : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+            ? `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${geminiKey}`
+            : `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent`
           const headers = { 'Content-Type': 'application/json' }
           if (method === 'header') headers['x-goog-api-key'] = geminiKey
 
@@ -72,7 +74,7 @@ export default async function handler(req, res) {
           
           const rawText = await r.text()
           
-          if (r.status === 429) { errors.push(`${model}:${method}:429:ratelimit`); break }
+          if (r.status === 429) { errors.push(`${model}:${method}:429:ratelimit`); continue }
           if (!r.ok) { errors.push(`${model}:${method}:${r.status}:${rawText.substring(0,100)}`); continue }
           
           const d = JSON.parse(rawText)
