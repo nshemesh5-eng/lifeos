@@ -1,4 +1,3 @@
-// שמשון AI — Gemini REST with AQ. key support
 export default async function handler(req, res) {
   const allowed = process.env.ALLOWED_ORIGIN || 'https://lifeos-eight-inky.vercel.app'
   res.setHeader('Access-Control-Allow-Origin', allowed)
@@ -11,23 +10,20 @@ export default async function handler(req, res) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY
 
   if (!geminiKey && !anthropicKey) {
-    return res.status(500).json({ text: 'שמשון לא מוגדר — חסר API key ב-Vercel', provider: 'error' })
+    return res.status(200).json({ text: 'אין API key מוגדר', provider: 'error', debug: { hasGemini: false, hasClaude: false } })
   }
 
   const { messages = [], systemPrompt = '', context = null, source = 'app' } = req.body || {}
   const fullSystem = buildSystem(systemPrompt, context, source)
   const recent = messages.slice(-20)
+  const errors = []
 
-  // ── 1. Try Anthropic Claude (if key exists) ────────────────────
+  // ── 1. Anthropic Claude ────────────────────────────────────────
   if (anthropicKey) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01'
-        },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 800,
@@ -42,55 +38,56 @@ export default async function handler(req, res) {
       if (r.ok && d.content?.[0]?.text) {
         return res.status(200).json({ text: d.content[0].text.trim(), provider: 'claude' })
       }
-    } catch {}
+      errors.push(`claude:${r.status}:${d.error?.message||''}`)
+    } catch(e) { errors.push(`claude:${e.message}`) }
   }
 
-  // ── 2. Gemini REST — both key formats ─────────────────────────
+  // ── 2. Gemini REST ─────────────────────────────────────────────
   if (geminiKey) {
     const contents = [
       { role: 'user', parts: [{ text: fullSystem }] },
       { role: 'model', parts: [{ text: 'מוכן.' }] },
       ...recent
     ]
-    const genConfig = { temperature: 0.8, maxOutputTokens: 800 }
     const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
     
-    // Try both auth methods — AQ. keys use x-goog-api-key header, AIzaSy use ?key= param
     for (const model of models) {
-      for (const authMethod of ['header', 'param']) {
+      // Try both auth methods
+      for (const method of ['param', 'header']) {
         try {
-          const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
-          const url = authMethod === 'param' ? `${baseUrl}?key=${geminiKey}` : baseUrl
+          const url = method === 'param'
+            ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
+            : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
           const headers = { 'Content-Type': 'application/json' }
-          if (authMethod === 'header') headers['x-goog-api-key'] = geminiKey
+          if (method === 'header') headers['x-goog-api-key'] = geminiKey
 
           const r = await fetch(url, {
             method: 'POST', headers,
-            body: JSON.stringify({ contents, generationConfig: genConfig }),
-            signal: AbortSignal.timeout(10000)
+            body: JSON.stringify({
+              contents,
+              generationConfig: { temperature: 0.8, maxOutputTokens: 800 }
+            }),
+            signal: AbortSignal.timeout(12000)
           })
-          const d = await r.json()
           
-          if (r.status === 429) break // rate limit — try next model
-          if (r.status === 400 || r.status === 401 || r.status === 403) continue // try other auth
-          if (!r.ok) continue
+          const rawText = await r.text()
           
+          if (r.status === 429) { errors.push(`${model}:${method}:429:ratelimit`); break }
+          if (!r.ok) { errors.push(`${model}:${method}:${r.status}:${rawText.substring(0,100)}`); continue }
+          
+          const d = JSON.parse(rawText)
           const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
           if (text) return res.status(200).json({ text, provider: 'gemini', model })
-        } catch { continue }
+          errors.push(`${model}:${method}:no_text`)
+        } catch(e) { errors.push(`${model}:${method}:${e.message?.substring(0,50)}`) }
       }
     }
   }
 
-  // ── 3. Smart fallback responses ────────────────────────────────
-  const fallbacks = [
-    'שמשון עובד אבל ה-AI לא זמין כרגע. בדוק את ה-API key ב-Vercel Settings → Environment Variables.',
-    'ה-Gemini key לא מוגדר נכון. עבור ל-Vercel → Settings → Environment Variables → VITE_GEMINI_API_KEY.',
-  ]
-  return res.status(200).json({ 
-    text: fallbacks[0], 
+  return res.status(200).json({
+    text: 'שמשון עובד אבל ה-AI לא זמין כרגע.',
     provider: 'fallback',
-    debug: { hasGemini: !!geminiKey, hasClaude: !!anthropicKey }
+    debug: { hasGemini: !!geminiKey, hasClaude: !!anthropicKey, errors }
   })
 }
 
@@ -101,27 +98,26 @@ function buildSystem(base, ctx, source) {
 
   const {
     userName='', date='', dayOfWeek='', hour=new Date().getHours(),
-    todayFood=[], todayCalories=0, todayProtein=0, targetCal=2000, targetProtein=150,
-    finance={}, workout={}, recentWorkouts=[],
+    todayCalories=0, todayProtein=0, targetCal=2000, targetProtein=150,
+    todayFood=[], finance={}, workout={},
     todayTasks=[], urgentTasks=[], todayHabits=[],
-    todayEvents=[], upcomingEvents=[], todayReminders=[], goals=[],
+    todayEvents=[], goals=[], todayReminders=[],
   } = ctx
 
   const greeting = hour < 12 ? 'בוקר' : hour < 17 ? 'צהריים' : hour < 21 ? 'ערב' : 'לילה'
   const calPct = Math.round((todayCalories / targetCal) * 100)
-  const doneHabits = todayHabits.filter(h => h.done).length
-  const pendingTasks = todayTasks.filter(t => !t.done).length
+  const doneHabits = (todayHabits || []).filter(h => h.done).length
+  const pending = (todayTasks || []).filter(t => !t.done).length
+  const bal = finance?.balance ?? finance?.monthBalance ?? 0
 
   return systemBase + `
 ════════════════════════════════════
-📊 CONTEXT — ${dayOfWeek}, ${date} | ${greeting}
-════════════════════════════════════
-👤 ${userName || 'נתנאל'} | ${greeting} טוב!
+📊 CONTEXT — ${dayOfWeek}, ${date} | ${greeting} טוב!
 🥗 תזונה: ${todayCalories}/${targetCal} קל' (${calPct}%) | חלבון ${Math.round(todayProtein)}g/${targetProtein}g
-💰 פיננסים: +${(finance.income||0).toLocaleString()}₪ | -${(finance.expenses||0).toLocaleString()}₪ | ${(finance.balance>=0?'+':'')}${(finance.balance||0).toLocaleString()}₪
-🏋 כושר: ${workout.today?'✓ אמן היום':'✗ לא אמן'} | streak ${workout.streak||0}
-✅ משימות: ${pendingTasks} פתוחות${urgentTasks.length>0?' | דחוף: '+urgentTasks.slice(0,2).map(t=>t.title).join(', '):''}
-🔄 הרגלים: ${doneHabits}/${todayHabits.length}
+💰 פיננסים: ${bal >= 0 ? '+' : ''}₪${Number(bal).toLocaleString()}
+🏋 כושר: ${workout?.today ? '✓ אמן' : '✗ לא אמן'} | streak ${workout?.streak || 0}
+✅ משימות: ${pending} פתוחות
+🔄 הרגלים: ${doneHabits}/${(todayHabits||[]).length}
 ════════════════════════════════════` + (isMobile ? '\nWhatsApp: ללא markdown, קצר.' : '')
 }
 
