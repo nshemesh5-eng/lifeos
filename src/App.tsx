@@ -36,7 +36,7 @@ function buildContext(tasks: any[], habits: any[], habitLogs: any[], reminders: 
     dayOfWeek: format(now, 'EEEE', { locale: he }),
     todayTasks: tasks.filter(t => !t.done).slice(0, 8).map(t => ({ title: t.title, done: t.done, priority: t.priority })),
     todayHabits: habits.map(h => ({ name: h.name, done: habitLogs.some((l: any) => l.habit_id === h.id && l.date === today) })),
-    finance: { monthBalance: income - expenses, monthExpenses: expenses, monthIncome: income },
+    finance: { income, expenses, balance: income - expenses, topCategory: '', monthBalance: income - expenses, monthExpenses: expenses, monthIncome: income },
     workoutToday: false,
     remindersToday: reminders.filter(r => r.active && r.frequency === 'daily').map(r => ({ text: r.title, time: r.time_of_day })),
   }
