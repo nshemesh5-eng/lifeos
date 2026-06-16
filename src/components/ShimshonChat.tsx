@@ -20,7 +20,7 @@ const PAGE_LABELS: Record<string, string> = {
   habits:'◎ הרגלים', reminders:'◷ תזכורות', invest:'△ השקעות', nutrition:'🥗 תזונה',
 }
 
-export default function ShimshonChat({ context, briefing, onNavigate, embedded }: Props) {
+export default function ShimshonChat({ context, briefing, onNavigate, onRefresh, embedded, userId, authToken }: Props) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ShimshonMessage[]>([])
   const [input, setInput] = useState('')
@@ -53,6 +53,14 @@ export default function ShimshonChat({ context, briefing, onNavigate, embedded }
 
     const reply = await askShimshon(next, context)
     const aiMsg: ShimshonMessage = { role: 'shimshon', content: reply, timestamp: new Date() }
+    // needsRefresh is handled by askShimshon returning a special prefix
+    if (reply.startsWith('__REFRESH__:')) {
+      const actualReply = reply.replace('__REFRESH__:', '')
+      const aiMsg2: ShimshonMessage = { role: 'shimshon', content: actualReply, timestamp: new Date() }
+      setMessages(prev => [...prev.slice(0,-1), aiMsg2])
+      if (onRefresh) setTimeout(() => onRefresh(), 800)
+      return
+    }
     setMessages([...next, aiMsg])
     setLoading(false)
 
