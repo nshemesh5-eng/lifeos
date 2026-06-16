@@ -130,7 +130,9 @@ export async function loadLifeContext(userId: string): Promise<LifeContext> {
 // ── Ask Shimshon ──────────────────────────────────────────────────
 export async function askShimshon(
   messages: ShimshonMessage[],
-  context: LifeContext
+  context: LifeContext,
+  userId?: string | null,
+  authToken?: string | null
 ): Promise<string> {
   try {
     const res = await fetch('/api/shimshon', {
@@ -142,6 +144,8 @@ export async function askShimshon(
           parts: [{ text: m.content }]
         })),
         context,
+        userId: userId || null,
+        authToken: authToken || null,
       })
     })
     if (!res.ok) return 'שגיאה בתקשורת עם שמשון'
