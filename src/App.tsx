@@ -44,6 +44,7 @@ function buildContext(tasks: any[], habits: any[], habitLogs: any[], reminders: 
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
+  const [authToken, setAuthToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState('dashboard')
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('shimshon-theme') as Theme) || 'dark')
@@ -81,9 +82,9 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null); setLoading(false)
+      setUser(session?.user ?? null); setAuthToken(session?.access_token ?? null); setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setUser(session?.user ?? null))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => { setUser(session?.user ?? null); setAuthToken(session?.access_token ?? null) })
     return () => subscription.unsubscribe()
   }, [])
 
@@ -198,7 +199,7 @@ export default function App() {
           </div>
           <button className="btn-icon" onClick={() => setAiOpen(false)} style={{ fontSize: 12 }}>✕</button>
         </div>
-        <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} embedded />
+        <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} onRefresh={() => user && loadContext(user.id)} userId={user?.id} authToken={authToken} embedded />
       </aside>
       {/* Mobile bottom navigation */}
       <nav className="mobile-bottom-nav">
