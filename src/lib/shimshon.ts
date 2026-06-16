@@ -146,7 +146,12 @@ export async function askShimshon(
     })
     if (!res.ok) return 'שגיאה בתקשורת עם שמשון'
     const data = await res.json()
-    return data.text || '...'
+    const text = data.text || '...'
+    // Prefix with __REFRESH__ so ShimshonChat knows to reload context
+    if (data.needsRefresh && data.actionResult?.success) {
+      return '__REFRESH__:' + text
+    }
+    return text
   } catch {
     return 'שגיאת תקשורת'
   }
