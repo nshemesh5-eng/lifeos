@@ -3,10 +3,13 @@ import { askShimshon, ShimshonMessage, LifeContext, detectNavIntent } from '../l
 import './ShimshonChat.css'
 
 interface Props {
-  embedded?: boolean
-  context: LifeContext
+  context?: LifeContext
   briefing?: string
   onNavigate?: (page: string) => void
+  onRefresh?: () => void
+  embedded?: boolean
+  userId?: string
+  authToken?: string
 }
 
 // Estimate rough token/context usage
