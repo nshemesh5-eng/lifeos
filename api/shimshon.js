@@ -131,6 +131,9 @@ function buildSystem(base, ctx, source) {
 🏋 כושר: ${workout?.today?'✓ אמן':'✗ לא אמן'} | streak ${workout?.streak||0}
 ✅ משימות: ${(todayTasks||[]).filter(t=>!t.done).length} פתוחות${urgentTasks?.length?' | דחוף: '+urgentTasks.slice(0,2).map(t=>t.title).join(', '):''}
 🔄 הרגלים: ${(todayHabits||[]).filter(h=>h.done).length}/${(todayHabits||[]).length}
+   ${(todayHabits||[]).map(h=>(h.done?'✅':'⬜')+' '+h.name).join(' | ')}
+✅ משימות פתוחות:
+   ${(todayTasks||[]).slice(0,5).map(t=>'• '+t.title+(t.priority==='high'?' 🔴':'')).join('\n   ')}${(todayTasks||[]).length>5?'\n   ...ועוד '+((todayTasks||[]).length-5):''}
 ════════════════════════════════════` + (isMobile ? '\nWhatsApp: ללא markdown, קצר.' : '')
 }
 
