@@ -199,7 +199,7 @@ export default function App() {
           </div>
           <button className="btn-icon" onClick={() => setAiOpen(false)} style={{ fontSize: 12 }}>✕</button>
         </div>
-        <ShimshonChat context={context} briefing={briefing} onNavigate={navigate} onRefresh={() => user && loadContext(user.id)} userId={user?.id ?? undefined} authToken={authToken ?? undefined} embedded />
+        <ShimshonChat key="shimshon-main" context={context} briefing={briefing} onNavigate={navigate} userId={user?.id ?? undefined} authToken={authToken ?? undefined} embedded />
       </aside>
       {/* Mobile bottom navigation */}
       <nav className="mobile-bottom-nav">
