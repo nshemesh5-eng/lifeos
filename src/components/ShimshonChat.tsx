@@ -55,16 +55,16 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
     setLoading(true)
 
     const reply = await askShimshon(next, context ?? ({} as LifeContext), userId, authToken)
-    const aiMsg: ShimshonMessage = { role: 'shimshon', content: reply, timestamp: new Date() }
-    // needsRefresh is handled by askShimshon returning a special prefix
+    // needsRefresh: if reply has __REFRESH__ prefix, strip it and refresh context
+    let finalReply = reply
+    let shouldRefresh = false
     if (reply.startsWith('__REFRESH__:')) {
-      const actualReply = reply.replace('__REFRESH__:', '')
-      const aiMsg2: ShimshonMessage = { role: 'shimshon', content: actualReply, timestamp: new Date() }
-      setMessages(prev => [...prev.slice(0,-1), aiMsg2])
-      if (onRefresh) setTimeout(() => onRefresh(), 800)
-      return
+      finalReply = reply.replace('__REFRESH__:', '')
+      shouldRefresh = true
     }
+    const aiMsg: ShimshonMessage = { role: 'shimshon', content: finalReply, timestamp: new Date() }
     setMessages([...next, aiMsg])
+    if (shouldRefresh && onRefresh) setTimeout(() => onRefresh(), 800)
     setLoading(false)
 
     // Detect navigation intent
