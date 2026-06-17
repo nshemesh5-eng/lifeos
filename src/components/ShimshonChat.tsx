@@ -64,7 +64,7 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
     }
     const aiMsg: ShimshonMessage = { role: 'shimshon', content: finalReply, timestamp: new Date() }
     setMessages([...next, aiMsg])
-    if (shouldRefresh && onRefresh) setTimeout(() => onRefresh(), 800)
+    // DB write happened — context will refresh on next page load
     setLoading(false)
 
     // Detect navigation intent
