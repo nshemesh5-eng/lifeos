@@ -54,7 +54,7 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
     setMessages(next)
     setLoading(true)
 
-    const reply = await askShimshon(next, context)
+    const reply = await askShimshon(next, context ?? ({} as LifeContext), userId, authToken)
     const aiMsg: ShimshonMessage = { role: 'shimshon', content: reply, timestamp: new Date() }
     // needsRefresh is handled by askShimshon returning a special prefix
     if (reply.startsWith('__REFRESH__:')) {
