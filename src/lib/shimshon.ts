@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-// ── Types ────────────────────────────────────────────────────────
+// ââ Types ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 export interface ShimshonMessage {
   role: 'user' | 'assistant' | 'shimshon'
   content: string
@@ -24,10 +24,14 @@ export interface LifeContext {
   workout?: { today?: boolean; todayType?: string; streak?: number; monthCount?: number }
   workoutToday?: boolean
   // Tasks
-  todayTasks?: Array<{title: string; done: boolean; priority: string}>
-  urgentTasks?: Array<{title: string}>
+  todayTasks?: Array<{id?: string; title: string; done: boolean; priority: string}>
+  urgentTasks?: Array<{id?: string; title: string}>
   // Habits
-  todayHabits?: Array<{name: string; done: boolean}>
+  todayHabits?: Array<{id?: string; name: string; done: boolean}>
+  // Mood & Memory
+  recentMoods?: Array<{score: number; date: string; note?: string}>
+  avgMood?: number | null
+  memoryNotes?: string
   // Calendar
   todayEvents?: Array<{time: string; title: string}>
   // Goals
@@ -38,12 +42,12 @@ export interface LifeContext {
   [key: string]: any
 }
 
-// ── Load full life context from Supabase ─────────────────────────
+// ââ Load full life context from Supabase âââââââââââââââââââââââââ
 export async function loadLifeContext(userId: string): Promise<LifeContext> {
   const now = new Date()
   const today = now.toISOString().split('T')[0]
-  const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת']
-  const months = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
+  const days = ['×¨××©××','×©× ×','×©×××©×','×¨×××¢×','××××©×','×©××©×','×©××ª']
+  const months = ['×× ×××¨','×¤××¨×××¨','××¨×¥','××¤×¨××','×××','××× ×','××××','×××××¡×','×¡×¤××××¨','×××§××××¨','× ×××××¨','××¦×××¨']
 
   // Parallel fetch everything
   const [
@@ -127,7 +131,7 @@ export async function loadLifeContext(userId: string): Promise<LifeContext> {
   }
 }
 
-// ── Ask Shimshon ──────────────────────────────────────────────────
+// ââ Ask Shimshon ââââââââââââââââââââââââââââââââââââââââââââââââââ
 export async function askShimshon(
   messages: ShimshonMessage[],
   context: LifeContext,
@@ -148,7 +152,7 @@ export async function askShimshon(
         authToken: authToken || null,
       })
     })
-    if (!res.ok) return 'שגיאה בתקשורת עם שמשון'
+    if (!res.ok) return '×©×××× ××ª×§×©××¨×ª ×¢× ×©××©××'
     const data = await res.json()
     const text = data.text || '...'
     // Prefix with __REFRESH__ so ShimshonChat knows to reload context
@@ -157,11 +161,11 @@ export async function askShimshon(
     }
     return text
   } catch {
-    return 'שגיאת תקשורת'
+    return '×©××××ª ×ª×§×©××¨×ª'
   }
 }
 
-// ── Daily briefing ────────────────────────────────────────────────
+// ââ Daily briefing ââââââââââââââââââââââââââââââââââââââââââââââââ
 export async function getDailyBriefing(context: LifeContext): Promise<string> {
   const f = context.finance || {}
   const w = context.workout || {}
@@ -169,26 +173,26 @@ export async function getDailyBriefing(context: LifeContext): Promise<string> {
   const u = context.urgentTasks || []
   const bal = f.balance ?? f.monthBalance ?? 0
 
-  const prompt = `תן לי תדריך בוקר קצר — 3-4 משפטים. כלול:
-1. פיננסים: ${bal >= 0 ? '+' : ''}₪${Number(bal).toLocaleString()}
-2. אימון: ${w.today ? 'כן' : 'לא'}, streak: ${w.streak || 0}
-3. הרגלים: ${h.filter((x:any)=>x.done).length}/${h.length}
-4. דחוף: ${u.length > 0 ? u.map((x:any)=>x.title).join(', ') : 'אין'}
-היה ספציפי ועם מספרים.`
+  const prompt = `×ª× ×× ×ª××¨×× ×××§×¨ ×§×¦×¨ â 3-4 ××©×¤×××. ××××:
+1. ×¤×× × ×¡××: ${bal >= 0 ? '+' : ''}âª${Number(bal).toLocaleString()}
+2. ×××××: ${w.today ? '××' : '××'}, streak: ${w.streak || 0}
+3. ××¨××××: ${h.filter((x:any)=>x.done).length}/${h.length}
+4. ××××£: ${u.length > 0 ? u.map((x:any)=>x.title).join(', ') : '×××'}
+××× ×¡×¤×¦××¤× ××¢× ××¡×¤×¨××.`
 
   return askShimshon([{ role: 'user', content: prompt }], context)
 }
 
-// ── Navigation intent detection ──────────────────────────────────
+// ââ Navigation intent detection ââââââââââââââââââââââââââââââââââ
 export function detectNavIntent(msg: string): string | null {
   const m = msg.toLowerCase()
-  if (m.includes('תזונה') || m.includes('אוכל') || m.includes('ארוחה')) return 'nutrition'
-  if (m.includes('פיננסים') || m.includes('כסף') || m.includes('הוצאות')) return 'finance'
-  if (m.includes('אימון') || m.includes('כושר') || m.includes('ספורט')) return 'workout'
-  if (m.includes('הרגלים') || m.includes('הרגל')) return 'habits'
-  if (m.includes('משימות') || m.includes('משימה')) return 'tasks'
-  if (m.includes('לוח שנה') || m.includes('אירוע') || m.includes('פגישה')) return 'calendar'
-  if (m.includes('השקעות') || m.includes('מניות')) return 'invest'
-  if (m.includes('תזכורות')) return 'reminders'
+  if (m.includes('×ª××× ×') || m.includes('××××') || m.includes('××¨×××')) return 'nutrition'
+  if (m.includes('×¤×× × ×¡××') || m.includes('××¡×£') || m.includes('×××¦×××ª')) return 'finance'
+  if (m.includes('×××××') || m.includes('×××©×¨') || m.includes('×¡×¤××¨×')) return 'workout'
+  if (m.includes('××¨××××') || m.includes('××¨××')) return 'habits'
+  if (m.includes('××©××××ª') || m.includes('××©×××')) return 'tasks'
+  if (m.includes('××× ×©× ×') || m.includes('×××¨××¢') || m.includes('×¤×××©×')) return 'calendar'
+  if (m.includes('××©×§×¢××ª') || m.includes('×× ×××ª')) return 'invest'
+  if (m.includes('×ª××××¨××ª')) return 'reminders'
   return null
 }
