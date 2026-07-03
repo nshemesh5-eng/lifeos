@@ -30,19 +30,16 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
       const saved = sessionStorage.getItem('shimshon-messages')
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (parsed.length > 0) return parsed.map((m: any) => ({...m, timestamp: new Date(m.timestamp)}))
+        if (Array.isArray(parsed) && parsed.length > 0)
+          return parsed.map((m: any) => ({...m, timestamp: new Date(m.timestamp)}))
       }
     } catch {}
     return []
   })
 
-  // Wrap setMessages to also persist to sessionStorage immediately
-  const saveMessages = (updater: ShimshonMessage[] | ((prev: ShimshonMessage[]) => ShimshonMessage[])) => {
-    setMessages(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      try { sessionStorage.setItem('shimshon-messages', JSON.stringify(next)) } catch {}
-      return next
-    })
+  const saveMessages = (next: ShimshonMessage[]) => {
+    saveMessages(next)
+    try { sessionStorage.setItem('shimshon-messages', JSON.stringify(next)) } catch {}
   }
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
