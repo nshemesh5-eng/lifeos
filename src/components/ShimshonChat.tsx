@@ -28,15 +28,22 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
   const [messages, setMessages] = useState<ShimshonMessage[]>(() => {
     try {
       const saved = sessionStorage.getItem('shimshon-messages')
-      if (saved) return JSON.parse(saved).map((m: any) => ({...m, timestamp: new Date(m.timestamp)}))
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed.length > 0) return parsed.map((m: any) => ({...m, timestamp: new Date(m.timestamp)}))
+      }
     } catch {}
     return []
   })
 
-  // Persist messages to sessionStorage
-  useEffect(() => {
-    try { sessionStorage.setItem('shimshon-messages', JSON.stringify(messages)) } catch {}
-  }, [messages])
+  // Wrap setMessages to also persist to sessionStorage immediately
+  const saveMessages = (updater: ShimshonMessage[] | ((prev: ShimshonMessage[]) => ShimshonMessage[])) => {
+    setMessages(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      try { sessionStorage.setItem('shimshon-messages', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [navSuggest, setNavSuggest] = useState<string | null>(null)
@@ -62,7 +69,7 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
 
     const userMsg: ShimshonMessage = { role: 'user', content: msg, timestamp: new Date() }
     const next = [...messages, userMsg]
-    setMessages(next)
+    saveMessages(next)
     setLoading(true)
 
     const reply = await askShimshon(next, context ?? ({} as LifeContext), userId, authToken)
@@ -74,7 +81,7 @@ export default function ShimshonChat({ context, briefing, onNavigate, onRefresh,
       shouldRefresh = true
     }
     const aiMsg: ShimshonMessage = { role: 'shimshon', content: finalReply, timestamp: new Date() }
-    setMessages([...next, aiMsg])
+    saveMessages([...next, aiMsg])
     // DB write happened — context will refresh on next page load
     setLoading(false)
 
