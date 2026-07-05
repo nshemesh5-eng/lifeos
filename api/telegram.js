@@ -1,32 +1,34 @@
-// api/telegram.js — שמשון Telegram Bot webhook
+// api/telegram.js
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(200).json({ ok: true })
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-  const MY_CHAT_ID = process.env.TELEGRAM_MY_CHAT_ID
-  const baseUrl = 'https://lifeos-eight-inky.vercel.app'
+  const BOT = process.env.TELEGRAM_BOT_TOKEN
+  const MY = process.env.TELEGRAM_MY_CHAT_ID
+  const KEY = process.env.ANTHROPIC_API_KEY
   const { message } = req.body || {}
   if (!message) return res.status(200).json({ ok: true })
-  const chatId = message.chat?.id?.toString()
+  const chatId = String(message.chat?.id || '')
   const text = message.text || ''
-  if (MY_CHAT_ID && chatId !== MY_CHAT_ID) {
-    await sendTelegram(BOT_TOKEN, chatId, 'לא מורשה')
-    return res.status(200).json({ ok: true })
-  }
-  let reply = 'שמשון לא זמין כרגע'
+  if (MY && chatId !== MY) { await send(BOT, chatId, 'לא מורשה'); return res.status(200).json({ ok: true }) }
+  let reply = 'שמשון לא זמין'
   try {
-    const r = await fetch(baseUrl + '/api/shimshon', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', parts: [{ text }] }], source: 'telegram' })
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 500,
+        system: 'אתה שמשון, עוזר אישי חכם. ענה תמיד בעברית, קצר וישיר כחבר.',
+        messages: [{ role: 'user', content: text }] })
     })
     const d = await r.json()
-    reply = d.text || 'שגיאה'
-  } catch {}
-  await sendTelegram(BOT_TOKEN, chatId, reply)
-  res.status(200).json({ ok: true })
+    reply = d.content?.[0]?.text || ('error: ' + (d.error?.message || JSON.stringify(d)))
+  } catch(e) { reply = 'שגיאה: ' + e.message }
+  await send(BOT, chatId, reply)
+  return res.status(200).json({ ok: true })
 }
-async function sendTelegram(token, chatId, text) {
-  return fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text })
-  })
+async function send(token, chatId, text) {
+  try {
+    await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text })
+    })
+  } catch {}
 }
