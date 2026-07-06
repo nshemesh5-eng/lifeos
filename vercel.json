@@ -8,6 +8,5 @@
       "path": "/api/cron-evening",
       "schedule": "0 19 * * *"
     }
-  ],
-  "_t": "1"
+  ]
 }
