@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-// ── Types ───────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────
 export interface ShimshonMessage {
   role: 'user' | 'assistant' | 'shimshon'
   content: string
@@ -187,12 +187,12 @@ export async function getDailyBriefing(context: LifeContext): Promise<string> {
 export function detectNavIntent(msg: string): string | null {
   const m = msg.toLowerCase()
   if (m.includes('תזונה') || m.includes('אוכל') || m.includes('ארוחה')) return 'nutrition'
-  if (m.includes('פיננסים') || m.includes('כסק') || m.includes('הוצאות')) return 'finance'
+  if (m.includes('פיננסים') || m.includes('כסף') || m.includes('הוצאות')) return 'finance'
   if (m.includes('אימון') || m.includes('כושר') || m.includes('ספורט')) return 'workout'
   if (m.includes('הרגלים') || m.includes('הרגל')) return 'habits'
   if (m.includes('משימות') || m.includes('משימה')) return 'tasks'
   if (m.includes('לוח שנה') || m.includes('אירוע') || m.includes('פגישה')) return 'calendar'
   if (m.includes('השקעות') || m.includes('מניות')) return 'invest'
-  if (m.includes('תזכורוע')) return 'reminders'
+  if (m.includes('תזכורות')) return 'reminders'
   return null
 }
