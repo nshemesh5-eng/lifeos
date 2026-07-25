@@ -1,12 +1,12 @@
-/* ═══════════════════════════════════════════════════════
-   שמשון Design System v2.0 — Luxury Dark OS
-   ═══════════════════════════════════════════════════════ */
+/* âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+   ×©××©×× Design System v2.0 â Luxury Dark OS
+   âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,300;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── Themes ─────────────────────────────────────────── */
+/* ââ Themes âââââââââââââââââââââââââââââââââââââââââââ */
 :root, [data-theme="dark"] {
   --bg:         #07090F;
   --bg2:        #0B0E18;
@@ -56,7 +56,7 @@
   --shadow:     0 4px 32px rgba(0,0,0,0.7);
   --shadow-lg:  0 12px 64px rgba(0,0,0,0.8);
   --sidebar-w:  220px;
-  --ai-w:       300px;
+  --ai-w:       380px;
   --topbar-h:   56px;
 }
 
@@ -108,7 +108,7 @@
   --text3:      #6B5238;
 }
 
-/* ── Base ───────────────────────────────────────────── */
+/* ââ Base âââââââââââââââââââââââââââââââââââââââââââââ */
 html { direction: rtl; font-size: 16px; scroll-behavior: smooth; }
 
 body {
@@ -129,7 +129,7 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 code, pre { font-family: 'DM Mono', monospace; }
 
-/* ── Cards ──────────────────────────────────────────── */
+/* ââ Cards ââââââââââââââââââââââââââââââââââââââââââââ */
 .card {
   background: var(--surface);
   border: 0.5px solid var(--border);
@@ -148,7 +148,7 @@ code, pre { font-family: 'DM Mono', monospace; }
 }
 .card-glow:hover { box-shadow: var(--gold-glow); border-color: rgba(245,200,66,0.2); }
 
-/* ── Buttons ────────────────────────────────────────── */
+/* ââ Buttons ââââââââââââââââââââââââââââââââââââââââââ */
 .btn-gold {
   height: 38px; padding: 0 20px;
   background: var(--gold); color: #000;
@@ -191,7 +191,7 @@ code, pre { font-family: 'DM Mono', monospace; }
 }
 .btn-icon:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
 
-/* ── Form inputs ────────────────────────────────────── */
+/* ââ Form inputs ââââââââââââââââââââââââââââââââââââââ */
 .form-input {
   width: 100%; height: 40px; padding: 0 14px;
   background: var(--surface2);
@@ -207,7 +207,7 @@ code, pre { font-family: 'DM Mono', monospace; }
 select.form-input { cursor: pointer; }
 textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 
-/* ── Modals ─────────────────────────────────────────── */
+/* ââ Modals âââââââââââââââââââââââââââââââââââââââââââ */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
@@ -237,7 +237,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .mfield { display: flex; flex-direction: column; gap: 5px; }
 .mfield label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
 
-/* ── Module pages ───────────────────────────────────── */
+/* ââ Module pages âââââââââââââââââââââââââââââââââââââ */
 .module-page { padding: 24px 0 48px; }
 .module-header {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -249,7 +249,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 }
 .module-sub { font-size: 12px; color: var(--text3); letter-spacing: 0.02em; }
 
-/* ── Tabs ───────────────────────────────────────────── */
+/* ââ Tabs âââââââââââââââââââââââââââââââââââââââââââââ */
 .tab-bar {
   display: flex; gap: 2px; padding: 3px;
   background: var(--surface2); border-radius: 12px;
@@ -266,7 +266,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
   box-shadow: var(--shadow-sm); font-weight: 600;
 }
 
-/* ── Badges ─────────────────────────────────────────── */
+/* ââ Badges âââââââââââââââââââââââââââââââââââââââââââ */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 6px;
@@ -279,7 +279,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .badge-blue { background: var(--blue-dim); color: var(--blue); }
 .badge-purple { background: var(--purple-dim); color: var(--purple); }
 
-/* ── Colors ─────────────────────────────────────────── */
+/* ââ Colors âââââââââââââââââââââââââââââââââââââââââââ */
 .text-green { color: var(--green) !important; }
 .text-red { color: var(--red) !important; }
 .text-gold { color: var(--gold) !important; }
@@ -287,7 +287,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .text-blue { color: var(--blue) !important; }
 .text-muted { color: var(--text3) !important; }
 
-/* ── Progress rings / bars ──────────────────────────── */
+/* ââ Progress rings / bars ââââââââââââââââââââââââââââ */
 .progress-ring { transform: rotate(-90deg); }
 .progress-bar-track {
   height: 6px; background: var(--surface3);
@@ -298,7 +298,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
   transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* ── Skeleton ───────────────────────────────────────── */
+/* ââ Skeleton âââââââââââââââââââââââââââââââââââââââââ */
 .skeleton {
   background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
   background-size: 200% 100%;
@@ -307,7 +307,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 }
 @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
 
-/* ── Animations ─────────────────────────────────────── */
+/* ââ Animations âââââââââââââââââââââââââââââââââââââââ */
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(20px) } to { opacity: 1; transform: translateX(0) } }
@@ -319,16 +319,16 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .slide-up { animation: slideUp 0.25s ease; }
 .slide-in { animation: slideIn 0.2s ease; }
 
-/* ── Scrollbar ──────────────────────────────────────── */
+/* ââ Scrollbar ââââââââââââââââââââââââââââââââââââââââ */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--surface4); }
 
-/* ── Divider ────────────────────────────────────────── */
+/* ââ Divider ââââââââââââââââââââââââââââââââââââââââââ */
 .divider { height: 0.5px; background: var(--border); margin: 4px 0; }
 
-/* ── Toggle switch ──────────────────────────────────── */
+/* ââ Toggle switch ââââââââââââââââââââââââââââââââââââ */
 .toggle-switch { position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .toggle-track { position: absolute; inset: 0; background: var(--surface3); border-radius: 20px; transition: .2s; border: 0.5px solid var(--border2); }
@@ -336,7 +336,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .toggle-switch input:checked + .toggle-track { background: var(--green); border-color: var(--green); }
 .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); background: #fff; }
 
-/* ── Empty state ────────────────────────────────────── */
+/* ââ Empty state ââââââââââââââââââââââââââââââââââââââ */
 .empty-state {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 60px 20px; text-align: center; color: var(--text3);
@@ -344,10 +344,10 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
 .empty-state p { font-size: 14px; }
 
-/* ── Number font ────────────────────────────────────── */
+/* ââ Number font ââââââââââââââââââââââââââââââââââââââ */
 .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
-/* ── Stat card ──────────────────────────────────────── */
+/* ââ Stat card ââââââââââââââââââââââââââââââââââââââââ */
 .stat-card {
   background: var(--surface); border: 0.5px solid var(--border);
   border-radius: var(--radius-lg); padding: 16px 18px;
@@ -357,11 +357,11 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
 .stat-sub { font-size: 11px; color: var(--text3); }
 
-/* ══════════════════════════════════════════════════════
-   GLOBAL VISUAL UPGRADE — Infographics & Color
-   ══════════════════════════════════════════════════════ */
+/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+   GLOBAL VISUAL UPGRADE â Infographics & Color
+   ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 
-/* ─── Sidebar module colors ──────────────────────────── */
+/* âââ Sidebar module colors ââââââââââââââââââââââââââââ */
 .sidebar-item.active[data-page="finance"]   .sidebar-icon { color: var(--m-finance) !important; }
 .sidebar-item.active[data-page="workout"]   .sidebar-icon { color: var(--m-workout) !important; }
 .sidebar-item.active[data-page="habits"]    .sidebar-icon { color: var(--m-habits) !important; }
@@ -371,7 +371,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
 .sidebar-item.active[data-page="reminders"] .sidebar-icon { color: var(--m-remind) !important; }
 .sidebar-item.active[data-page="nutrition"] .sidebar-icon { color: var(--m-food) !important; }
 
-/* ─── Sidebar — colored left border on active ────────── */
+/* âââ Sidebar â colored left border on active ââââââââââ */
 .sidebar-item.active {
   position: relative;
 }
@@ -384,15 +384,15 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
   background: var(--item-accent, var(--gold));
 }
 
-/* ─── Card inner glows on hover ──────────────────────── */
+/* âââ Card inner glows on hover ââââââââââââââââââââââââ */
 .card { transition: border-color 0.2s, box-shadow 0.2s; }
 
-/* ─── Progress bars — gradient fill ─────────────────── */
+/* âââ Progress bars â gradient fill âââââââââââââââââââ */
 .progress-bar-fill {
   background: linear-gradient(90deg, var(--fill-start, currentColor), var(--fill-end, currentColor)) !important;
 }
 
-/* ─── Gold buttons — stronger glow ──────────────────── */
+/* âââ Gold buttons â stronger glow ââââââââââââââââââââ */
 .btn-gold {
   box-shadow: 0 2px 12px rgba(245, 200, 66, 0.25);
 }
@@ -400,27 +400,27 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
   box-shadow: 0 4px 20px rgba(245, 200, 66, 0.4) !important;
 }
 
-/* ─── Module titles — accent icon glow ──────────────── */
+/* âââ Module titles â accent icon glow ââââââââââââââââ */
 .module-title > span:first-child {
   filter: drop-shadow(0 0 8px currentColor);
   display: inline-block;
 }
 
-/* ─── Badges — subtle shadows ────────────────────────── */
+/* âââ Badges â subtle shadows ââââââââââââââââââââââââââ */
 .badge-green { box-shadow: 0 0 8px rgba(16,185,129,0.2); }
 .badge-red   { box-shadow: 0 0 8px rgba(244,63,94,0.2); }
 .badge-gold  { box-shadow: 0 0 8px rgba(245,200,66,0.2); }
 .badge-blue  { box-shadow: 0 0 8px rgba(59,130,246,0.2); }
 
-/* ─── Stat cards — compact infographic style ─────────── */
+/* âââ Stat cards â compact infographic style âââââââââââ */
 .stat-card { transition: transform 0.15s, box-shadow 0.15s; }
 .stat-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 .stat-value { background: linear-gradient(135deg, var(--text), var(--text2)); -webkit-background-clip: text; }
 
-/* ─── Empty states — warmer ──────────────────────────── */
+/* âââ Empty states â warmer ââââââââââââââââââââââââââââ */
 .empty-state-icon { filter: grayscale(0.3); }
 
-/* ─── AI panel — gold accent ─────────────────────────── */
+/* âââ AI panel â gold accent âââââââââââââââââââââââââââ */
 .ai-panel-avatar {
   box-shadow: 0 0 16px rgba(245, 200, 66, 0.3);
 }
@@ -428,22 +428,22 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
   box-shadow: 0 0 6px var(--green);
 }
 
-/* ─── Top bar theme btn — styled ────────────────────── */
+/* âââ Top bar theme btn â styled ââââââââââââââââââââââ */
 .app-theme-btn { border-radius: 20px !important; }
 .app-ai-toggle { border-radius: 20px !important; }
 
-/* ─── Form inputs — glow on focus ────────────────────── */
+/* âââ Form inputs â glow on focus ââââââââââââââââââââââ */
 .form-input:focus {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 20%, transparent),
               0 0 12px color-mix(in srgb, var(--gold) 10%, transparent) !important;
 }
 
-/* ─── Heatmap cells — global ─────────────────────────── */
+/* âââ Heatmap cells â global âââââââââââââââââââââââââââ */
 [class*="hm-cell"].active, [class*="heat-cell"] {
   transition: transform 0.1s, opacity 0.2s;
 }
 
-/* ─── Sidebar logo glow ──────────────────────────────── */
+/* âââ Sidebar logo glow ââââââââââââââââââââââââââââââââ */
 .sidebar-logo-icon {
   animation: goldPulse 4s ease-in-out infinite alternate;
 }
@@ -452,7 +452,7 @@ textarea.form-input { height: 80px; padding: 10px 14px; resize: vertical; }
   to   { box-shadow: 0 0 24px rgba(245,200,66,0.45); }
 }
 
-/* ─── Numbers — tabular, crisp ───────────────────────── */
+/* âââ Numbers â tabular, crisp âââââââââââââââââââââââââ */
 .dash-fin-val, .dash-stat-value, .wo-active-timer, .stat-value {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
